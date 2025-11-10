@@ -23,7 +23,7 @@
             <TextBox x:Name="ProjectTextBox" Width="100"/>
             <Label Content="PAT:"/>
             <PasswordBox x:Name="PatPasswordBox" Width="150"/>
-            <Button Content="Connect & Fetch Tasks" Click="ConnectButton_Click" Margin="10,0,0,0"/>
+            <Button Content="Connect and Fetch Tasks" Click="ConnectButton_Click" Margin="10,0,0,0"/>
         </StackPanel>
 
         <!-- Create New Work Item Section -->
@@ -50,17 +50,17 @@
 
         <!-- Task List Controls -->
         <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,0,0,5">
-            <Button Content="Move Selected to Top & Start" Click="MoveToTopButton_Click" Margin="0,0,10,0"/>
+            <Button Content="Move Selected to Top and Start" Click="MoveToTopButton_Click" Margin="0,0,10,0"/>
         </StackPanel>
 
         <!-- Task List -->
         <ListView x:Name="TasksListView" Grid.Row="3" Margin="0,0,0,10">
             <ListView.View>
                 <GridView>
-                    <GridViewColumn Header="ID" DisplayMemberBinding="{Binding id}"/>
-                    <GridViewColumn Header="Title" DisplayMemberBinding="{Binding fields[System.Title]}"/>
-                    <GridViewColumn Header="State" DisplayMemberBinding="{Binding fields[System.State]}"/>
-                    <GridViewColumn Header="Completed Work" DisplayMemberBinding="{Binding fields[Microsoft.VSTS.Scheduling.CompletedWork]}"/>
+                    <GridViewColumn Header="ID" DisplayMemberBinding="{Binding Id}"/>
+                    <GridViewColumn Header="Title" DisplayMemberBinding="{Binding Fields[System.Title]}"/>
+                    <GridViewColumn Header="State" DisplayMemberBinding="{Binding Fields[System.State]}"/>
+                    <GridViewColumn Header="Completed Work" DisplayMemberBinding="{Binding Fields[Microsoft.VSTS.Scheduling.CompletedWork]}"/>
                 </GridView>
             </ListView.View>
         </ListView>
@@ -71,7 +71,7 @@
             <TextBlock x:Name="TimerTextBlock" Text="00:00:00" FontSize="16" FontWeight="Bold"/>
             <Button x:Name="StartButton" Content="Start on Selected Task" Click="StartButton_Click" Margin="10,0,0,0"/>
             <Button x:Name="ResumeButton" Content="Resume" Click="ResumeButton_Click" Margin="10,0,0,0" IsEnabled="False"/>
-            <Button x:Name="StopButton" Content="Stop & Save" Click="StopButton_Click" Margin="10,0,0,0" IsEnabled="False"/>
+            <Button x:Name="StopButton" Content="Stop and Save" Click="StopButton_Click" Margin="10,0,0,0" IsEnabled="False"/>
         </StackPanel>
 
         <!-- Status & Minimize -->

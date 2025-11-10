@@ -1,30 +1,30 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Net.Http;
-using System.Net.Http.Headers;
 using System.Runtime.InteropServices;
-using System.Text;
-using System.Text.Json;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Threading;
+using Microsoft.TeamFoundation.WorkItemTracking.WebApi;
+using Microsoft.TeamFoundation.WorkItemTracking.WebApi.Models;
+using Microsoft.VisualStudio.Services.Common;
+using Microsoft.VisualStudio.Services.WebApi;
+using Microsoft.VisualStudio.Services.WebApi.Patch;
+using Microsoft.VisualStudio.Services.WebApi.Patch.Json;
 
 namespace Ma.TimeManagement
 {
     public partial class MainWindow : Window
     {
-        private string _baseUrl;
-        private string _authHeader;
-        private dynamic _selectedTask;
+        private WorkItemTrackingHttpClient _witClient;
+        private string _project;
+        private WorkItem _selectedTask;
         private DispatcherTimer _timer;
         private TimeSpan _elapsedTime = TimeSpan.Zero;
         private TimeSpan _savedTime = TimeSpan.Zero;
         private DateTime _lastSaveTime;
         private bool _isPausedDueToIdle = false;
-        private HttpClient _httpClient = new HttpClient();
-        private ObservableCollection<dynamic> _tasks = new ObservableCollection<dynamic>(); // For reordering
+        private ObservableCollection<WorkItem> _tasks = new ObservableCollection<WorkItem>(); // For reordering
 
         private const int AutoSaveIntervalMinutes = 15; // Auto-save every 15 min
         private const int IdleThresholdSeconds = 300; // Pause after 5 min idle
@@ -56,23 +56,28 @@ namespace Ma.TimeManagement
             {
                 var server = ServerUrlTextBox.Text.Trim();
                 var collection = CollectionTextBox.Text.Trim();
-                var project = ProjectTextBox.Text.Trim();
+                _project = ProjectTextBox.Text.Trim();
                 var pat = PatPasswordBox.Password.Trim();
 
-                _baseUrl = $"{server}/{collection}/{project}/_apis";
-                _authHeader = Convert.ToBase64String(Encoding.ASCII.GetBytes($":{pat}"));
+                var uri = new Uri($"{server}/{collection}");
+                var credentials = new VssBasicCredential(string.Empty, pat);
+                var connection = new VssConnection(uri, credentials);
+                _witClient = connection.GetClient<WorkItemTrackingHttpClient>();
 
                 // Fetch assigned Tasks (WIQL query)
-                var wiql = new { query = "SELECT [System.Id], [System.Title], [System.State], [Microsoft.VSTS.Scheduling.CompletedWork] FROM workitems WHERE [System.TeamProject] = @project AND [System.WorkItemType] = 'Task' AND [System.AssignedTo] = @me AND [System.State] <> 'Closed'" };
-                var response = await PostAsync("/wit/wiql?api-version=7.1", wiql);
-                var workItems = JsonSerializer.Deserialize<Dictionary<string, object>>(response)["workItems"];
+                var wiql = new Wiql
+                {
+                    Query = $"SELECT [System.Id], [System.Title], [System.State], [Microsoft.VSTS.Scheduling.CompletedWork] " +
+                            $"FROM workitems WHERE [System.TeamProject] = '{_project}' AND [System.WorkItemType] = 'Task' " +
+                            $"AND [System.AssignedTo] = @me AND [System.State] <> 'Closed'"
+                };
+                var queryResult = await _witClient.QueryByWiqlAsync(wiql);
 
                 // Get details for each
                 _tasks.Clear();
-                foreach (JsonElement idObj in (JsonElement)workItems)
+                foreach (var workItemRef in queryResult.WorkItems)
                 {
-                    var id = idObj.GetProperty("id").GetInt32();
-                    var task = JsonSerializer.Deserialize<dynamic>(await GetAsync($"/wit/workitems/{id}?api-version=7.1"));
+                    var task = await _witClient.GetWorkItemAsync(workItemRef.Id, expand: WorkItemExpand.Fields);
                     _tasks.Add(task);
                 }
 
@@ -89,7 +94,7 @@ namespace Ma.TimeManagement
             var type = WorkItemTypeComboBox.SelectedItem is ComboBoxItem item ? item.Content.ToString() : "Task";
             var title = NewTitleTextBox.Text.Trim();
             var description = NewDescriptionTextBox.Text.Trim();
-            var parentId = ParentIdTextBox.Text.Trim();
+            var parentIdStr = ParentIdTextBox.Text.Trim();
 
             if (string.IsNullOrEmpty(title))
             {
@@ -99,33 +104,31 @@ namespace Ma.TimeManagement
 
             try
             {
-                var patch = new List<object>
-                {
-                    new { op = "add", path = "/fields/System.Title", value = title }
-                };
+                var patch = new JsonPatchDocument();
+                patch.Add(new JsonPatchOperation { Operation = Operation.Add, Path = "/fields/System.Title", Value = title });
+
                 if (!string.IsNullOrEmpty(description))
                 {
-                    patch.Add(new { op = "add", path = "/fields/System.Description", value = description });
+                    patch.Add(new JsonPatchOperation { Operation = Operation.Add, Path = "/fields/System.Description", Value = description });
                 }
-                if (!string.IsNullOrEmpty(parentId))
+
+                if (!string.IsNullOrEmpty(parentIdStr) && int.TryParse(parentIdStr, out int parentId))
                 {
-                    patch.Add(new
+                    var parent = await _witClient.GetWorkItemAsync(parentId);
+                    patch.Add(new JsonPatchOperation
                     {
-                        op = "add",
-                        path = "/relations/-",
-                        value = new
+                        Operation = Operation.Add,
+                        Path = "/relations/-",
+                        Value = new WorkItemRelation
                         {
-                            rel = "System.LinkTypes.Hierarchy-Reverse",
-                            url = $"{_baseUrl}/wit/workitems/{parentId}"
+                            Rel = "System.LinkTypes.Hierarchy-Reverse",
+                            Url = parent.Url
                         }
                     });
                 }
 
-                var url = $"/wit/workitems/${type}?api-version=7.1";
-                var result = await PostPatchAsync(url, patch.ToArray(), "Post"); // Use Post for create
-
-                var created = JsonSerializer.Deserialize<dynamic>(result);
-                StatusTextBlock.Text = $"Created {type} ID: {created.id}";
+                var created = await _witClient.CreateWorkItemAsync(patch, _project, type);
+                StatusTextBlock.Text = $"Created {type} ID: {created.Id}";
 
                 // Clear inputs and refresh list
                 NewTitleTextBox.Text = "";
@@ -141,7 +144,7 @@ namespace Ma.TimeManagement
 
         private void MoveToTopButton_Click(object sender, RoutedEventArgs e)
         {
-            if (TasksListView.SelectedItem is dynamic selected)
+            if (TasksListView.SelectedItem is WorkItem selected)
             {
                 _tasks.Remove(selected);
                 _tasks.Insert(0, selected);
@@ -156,13 +159,20 @@ namespace Ma.TimeManagement
 
         private void StartButton_Click(object sender, RoutedEventArgs e)
         {
-            _selectedTask = TasksListView.SelectedItem as dynamic;
-            if (_selectedTask == null) { MessageBox.Show("Select a Task first."); return; }
+            if (TasksListView.SelectedItem is WorkItem selectedTask)
+            {
+                _selectedTask = selectedTask;
+            }
+            else
+            {
+                MessageBox.Show("Select a Task first.");
+                return;
+            }
 
             ResetTimerState();
             _timer.Start();
             UpdateButtonStates(isRunning: true);
-            StatusTextBlock.Text = $"Tracking Task #{_selectedTask.id}: {_selectedTask.fields["System.Title"]}";
+            StatusTextBlock.Text = $"Tracking Task #{_selectedTask.Id}: {_selectedTask.Fields["System.Title"]}";
         }
 
         private void ResumeButton_Click(object sender, RoutedEventArgs e)
@@ -172,8 +182,8 @@ namespace Ma.TimeManagement
                 _isPausedDueToIdle = false;
                 _timer.Start();
                 UpdateButtonStates(isRunning: true);
-                StatusTextBlock.Text = $"Resumed tracking Task #{_selectedTask.id}";
-                (Application.Current as App)._notifyIcon.ShowBalloonTip(5000, "Resumed", "Timer resumed after idle pause.", System.Windows.Forms.ToolTipIcon.Info);
+                StatusTextBlock.Text = $"Resumed tracking Task #{_selectedTask.Id}";
+                (Application.Current as App)._notifyIcon.ShowBalloonTip("Resumed", "Timer resumed after idle pause.", Hardcodet.Wpf.TaskbarNotification.BalloonIcon.Info);
             }
         }
 
@@ -188,7 +198,7 @@ namespace Ma.TimeManagement
             TimerTextBlock.Text = _elapsedTime.ToString(@"hh\:mm\:ss");
 
             var notifyIcon = (Application.Current as App)._notifyIcon;
-            notifyIcon.ToolTipText = $"Task #{_selectedTask.id}: {TimerTextBlock.Text}";
+            notifyIcon.ToolTipText = $"Task #{_selectedTask.Id}: {TimerTextBlock.Text}";
 
             // Auto-save check
             if ((DateTime.Now - _lastSaveTime).TotalMinutes >= AutoSaveIntervalMinutes)
@@ -205,7 +215,7 @@ namespace Ma.TimeManagement
                 UpdateButtonStates(isRunning: false);
                 _ = SaveIncrementAsync();
                 StatusTextBlock.Text = "Timer paused due to inactivity.";
-                notifyIcon.ShowBalloonTip(5000, "Idle Detected", "Timer paused after 5 min inactivity. Resume when ready.", System.Windows.Forms.ToolTipIcon.Warning);
+                notifyIcon.ShowBalloonTip("Idle Detected", "Timer paused after 5 min inactivity. Resume when ready.", Hardcodet.Wpf.TaskbarNotification.BalloonIcon.Warning);
             }
         }
 
@@ -214,7 +224,7 @@ namespace Ma.TimeManagement
             _timer.Stop();
             await SaveIncrementAsync();
 
-            StatusTextBlock.Text = $"Stopped and saved for Task #{_selectedTask.id}";
+            StatusTextBlock.Text = $"Stopped and saved for Task #{_selectedTask.Id}";
             ResetTimerState();
             UpdateButtonStates(isRunning: false);
 
@@ -228,20 +238,24 @@ namespace Ma.TimeManagement
 
             try
             {
-                var currentTask = JsonSerializer.Deserialize<dynamic>(await GetAsync($"/wit/workitems/{_selectedTask.id}?api-version=7.1"));
-                var currentCompleted = currentTask.fields.ContainsKey("Microsoft.VSTS.Scheduling.CompletedWork")
-                    ? (double)currentTask.fields["Microsoft.VSTS.Scheduling.CompletedWork"]
+                var currentTask = await _witClient.GetWorkItemAsync(_selectedTask.Id ?? 0);
+                var currentCompleted = currentTask.Fields.ContainsKey("Microsoft.VSTS.Scheduling.CompletedWork")
+                    ? (double)currentTask.Fields["Microsoft.VSTS.Scheduling.CompletedWork"]
                     : 0.0;
 
-                var patch = new[]
+                var patch = new JsonPatchDocument();
+                patch.Add(new JsonPatchOperation
                 {
-                    new { op = "add", path = "/fields/Microsoft.VSTS.Scheduling.CompletedWork", value = currentCompleted + increment.TotalHours }
-                };
-                await PostPatchAsync($"/wit/workitems/{_selectedTask.id}?api-version=7.1", patch, "Patch");
+                    Operation = Operation.Add,
+                    Path = "/fields/Microsoft.VSTS.Scheduling.CompletedWork",
+                    Value = currentCompleted + increment.TotalHours
+                });
+
+                await _witClient.UpdateWorkItemAsync(patch, _selectedTask.Id ?? 0);
 
                 _savedTime = _elapsedTime;
                 _lastSaveTime = DateTime.Now;
-                StatusTextBlock.Text = $"Auto-saved {increment.TotalHours:F2} hours to Task #{_selectedTask.id}";
+                StatusTextBlock.Text = $"Auto-saved {increment.TotalHours:F2} hours to Task #{_selectedTask.Id}";
             }
             catch (Exception ex)
             {
@@ -275,35 +289,6 @@ namespace Ma.TimeManagement
             var info = new LASTINPUTINFO { cbSize = (uint)Marshal.SizeOf(typeof(LASTINPUTINFO)) };
             GetLastInputInfo(ref info);
             return ((uint)Environment.TickCount - info.dwTime) / 1000;
-        }
-
-        private async Task<string> GetAsync(string path)
-        {
-            var request = new HttpRequestMessage(HttpMethod.Get, _baseUrl + path);
-            request.Headers.Authorization = new AuthenticationHeaderValue("Basic", _authHeader);
-            var response = await _httpClient.SendAsync(request);
-            response.EnsureSuccessStatusCode();
-            return await response.Content.ReadAsStringAsync();
-        }
-
-        private async Task<string> PostAsync(string path, object body)
-        {
-            return await PostPatchAsync(path, body, "Post");
-        }
-
-        private async Task<string> PatchAsync(string path, object body)
-        {
-            return await PostPatchAsync(path, body, "Patch");
-        }
-
-        private async Task<string> PostPatchAsync(string path, object body, string method)
-        {
-            var request = new HttpRequestMessage(method == "Patch" ? HttpMethod.Patch : HttpMethod.Post, _baseUrl + path);
-            request.Headers.Authorization = new AuthenticationHeaderValue("Basic", _authHeader);
-            request.Content = new StringContent(JsonSerializer.Serialize(body), Encoding.UTF8, "application/json-patch+json");
-            var response = await _httpClient.SendAsync(request);
-            response.EnsureSuccessStatusCode();
-            return await response.Content.ReadAsStringAsync();
         }
     }
 }

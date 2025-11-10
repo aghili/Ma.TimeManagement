@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Drawing;
 using System.Windows;
 using Hardcodet.Wpf.TaskbarNotification;
 
@@ -6,7 +7,7 @@ namespace Ma.TimeManagement
 {
     public partial class App : Application
     {
-        private TaskbarIcon _notifyIcon;
+        public TaskbarIcon _notifyIcon;
 
         protected override void OnStartup(StartupEventArgs e)
         {
@@ -15,7 +16,7 @@ namespace Ma.TimeManagement
             // Create tray icon
             _notifyIcon = new TaskbarIcon
             {
-                Icon = new System.Drawing.Icon("icon.ico"), // Add an icon file to project (or use SystemIcons.Application)
+                Icon = SystemIcons.Application, // Add an icon file to project (or use SystemIcons.Application)
                 ToolTipText = "Ma.TimeManagement - Time Tracking",
                 Visibility = Visibility.Visible
             };
