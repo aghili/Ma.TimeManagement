@@ -2,6 +2,7 @@
 using System.Drawing;
 using System.Windows;
 using Hardcodet.Wpf.TaskbarNotification;
+using Wpf.Ui.Appearance;
 
 namespace Ma.TimeManagement
 {
@@ -33,6 +34,8 @@ namespace Ma.TimeManagement
 
             // Double-click tray to show window
             _notifyIcon.TrayMouseDoubleClick += (s, args) => MainWindow.ShowAndActivate();
+
+            ApplicationThemeManager.ApplySystemTheme();
         }
 
         protected override void OnExit(ExitEventArgs e)

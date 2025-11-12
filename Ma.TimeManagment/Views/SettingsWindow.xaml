@@ -1,0 +1,21 @@
+﻿<Window x:Class="Ma.TimeManagement.Views.SettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+        Title="Settings" Height="auto" Width="500"
+        
+        >
+    <Grid Margin="10">
+        <StackPanel Orientation="Vertical">
+            <Label Content="Server:"/>
+            <ui:TextBox Text="{Binding ServerUrl}" Width="auto"/>
+            <Label Content="Collection:"/>
+            <ui:TextBox Text="{Binding Collection}" Width="200"/>
+            <Label Content="Project:"/>
+            <ui:TextBox Text="{Binding Project}" Width="200"/>
+            <Label Content="PAT:"/>
+            <PasswordBox x:Name="PatBox" Width="300"/>
+            <ui:Button Content="Connect" Command="{Binding ConnectCommand}" Margin="10,0,0,0"/>
+        </StackPanel>
+    </Grid>
+</Window>
