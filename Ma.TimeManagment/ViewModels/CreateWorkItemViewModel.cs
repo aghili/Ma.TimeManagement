@@ -7,11 +7,22 @@ using Microsoft.VisualStudio.Services.Common;
 using Microsoft.VisualStudio.Services.WebApi.Patch;
 using Microsoft.VisualStudio.Services.WebApi.Patch.Json;
 using System.Windows;
+using System.Windows.Navigation;
 
 namespace Ma.TimeManagement.ViewModels
 {
     public partial class CreateWorkItemViewModel : ObservableObject
     {
+        public CreateWorkItemViewModel(INavigationService navigationService,AzureDevOpsService azureDevOpsService,StatusService statusService)
+        {
+            this.navigationService = navigationService;
+            this.azureDevOpsService = azureDevOpsService;
+            this.statusService = statusService;
+        }
+        
+        [RelayCommand]
+        private void NavigateToHome() => navigationService.NavigateTo<HomeViewModel>();
+        
         [ObservableProperty]
         private int _selectedTypeIndex = 0;
 
@@ -23,6 +34,9 @@ namespace Ma.TimeManagement.ViewModels
 
         [ObservableProperty]
         private string _parentId;
+        private readonly INavigationService navigationService;
+        private readonly AzureDevOpsService azureDevOpsService;
+        private readonly StatusService statusService;
 
         [RelayCommand(CanExecute = nameof(CanCreate))]
         private async Task Create()
@@ -40,7 +54,7 @@ namespace Ma.TimeManagement.ViewModels
 
                 if (!string.IsNullOrEmpty(ParentId) && int.TryParse(ParentId, out int parentId))
                 {
-                    var parent = await AzureDevOpsService.Instance.WitClient.GetWorkItemAsync(parentId);
+                    var parent = await azureDevOpsService.GetWorkItemAsync(parentId);
                     patch.Add(new JsonPatchOperation
                     {
                         Operation = Operation.Add,
@@ -53,10 +67,10 @@ namespace Ma.TimeManagement.ViewModels
                     });
                 }
 
-                var created = await AzureDevOpsService.Instance.WitClient.CreateWorkItemAsync(patch, AzureDevOpsService.Instance.Project, type);
+                var created = await azureDevOpsService.CreateWorkItemAsync(patch,Guid.NewGuid(), type);
                 Application.Current.Dispatcher.Invoke(() => MessageBox.Show($"Created {type} ID: {created.Id}"));
-                (Application.Current.MainWindow as MainWindow)?.ViewModel.RefreshTasksCommand.Execute(null);
-                Application.Current.Dispatcher.Invoke(() => Application.Current.Windows.OfType<CreateWorkItemWindow>().FirstOrDefault()?.Close());
+                statusService.RefreshTasks();
+                NavigateToHome();
             }
             catch (Exception ex)
             {

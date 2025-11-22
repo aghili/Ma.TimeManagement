@@ -1,5 +1,4 @@
-﻿using Ma.TimeManagement.ViewModels;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -11,20 +10,19 @@ using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.Windows.Navigation;
 using System.Windows.Shapes;
-using Wpf.Ui.Appearance;
 
 namespace Ma.TimeManagement.Views
 {
     /// <summary>
-    /// Interaction logic for CreateWorkItemWindow.xaml
+    /// Interaction logic for TimeLIneView.xaml
     /// </summary>
-    public partial class CreateWorkItemWindow : Window
+    public partial class TimeLIneView : UserControl
     {
-        public CreateWorkItemWindow()
+        public TimeLIneView()
         {
             InitializeComponent();
-            DataContext = new CreateWorkItemViewModel();
         }
     }
 }

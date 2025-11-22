@@ -1,47 +1,173 @@
 ﻿using System;
 using System.Drawing;
+using System.IO;
+using System.Reflection;
 using System.Windows;
+using System.Windows.Forms;
+using System.Windows.Threading;
 using Hardcodet.Wpf.TaskbarNotification;
-using Wpf.Ui.Appearance;
+using Ma.TimeManagement.Data;
+using Ma.TimeManagement.Services;
+using Ma.TimeManagement.ViewModels;
+using Ma.TimeManagement.Views;
+using Ma.TimeManagement.Windows;
+using Microsoft.Data.Sqlite;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+//using Wpf.Ui.Appearance;
 
 namespace Ma.TimeManagement
 {
-    public partial class App : Application
+    public partial class App
     {
-        public TaskbarIcon _notifyIcon;
+        // The.NET Generic Host provides dependency injection, configuration, logging, and other services.
+        // https://docs.microsoft.com/dotnet/core/extensions/generic-host
+        // https://docs.microsoft.com/dotnet/core/extensions/dependency-injection
+        // https://docs.microsoft.com/dotnet/core/extensions/configuration
+        // https://docs.microsoft.com/dotnet/core/extensions/logging
 
-        protected override void OnStartup(StartupEventArgs e)
+        private static IHost _host;
+
+        /// <summary>
+        /// Gets registered service.
+        /// </summary>
+        /// <typeparam name="T">Type of the service to get.</typeparam>
+        /// <returns>Instance of the service or <see langword="null"/>.</returns>
+        public static T GetService<T>()
+            where T : class
         {
-            base.OnStartup(e);
-
-            // Create tray icon
-            _notifyIcon = new TaskbarIcon
-            {
-                Icon = SystemIcons.Application, // Add an icon file to project (or use SystemIcons.Application)
-                ToolTipText = "Ma.TimeManagement - Time Tracking",
-                Visibility = Visibility.Visible
-            };
-
-            // Context menu for tray
-            var contextMenu = new System.Windows.Controls.ContextMenu();
-            var showMenuItem = new System.Windows.Controls.MenuItem { Header = "Show Window" };
-            showMenuItem.Click += (s, args) => MainWindow.ShowAndActivate();
-            var exitMenuItem = new System.Windows.Controls.MenuItem { Header = "Exit" };
-            exitMenuItem.Click += (s, args) => Shutdown();
-            contextMenu.Items.Add(showMenuItem);
-            contextMenu.Items.Add(exitMenuItem);
-            _notifyIcon.ContextMenu = contextMenu;
-
-            // Double-click tray to show window
-            _notifyIcon.TrayMouseDoubleClick += (s, args) => MainWindow.ShowAndActivate();
-
-            ApplicationThemeManager.ApplySystemTheme();
+            return _host.Services.GetService(typeof(T)) as T;
         }
 
-        protected override void OnExit(ExitEventArgs e)
+        /// <summary>
+        /// Occurs when the application is loading.
+        /// </summary>
+        private void OnStartup(object sender, StartupEventArgs e)
         {
-            _notifyIcon.Dispose();
-            base.OnExit(e);
+            _host = Host
+            .CreateDefaultBuilder(e.Args)
+            .ConfigureAppConfiguration(c => { c.SetBasePath(StaticDataService.Instance.PathConfiguration); })
+            .ConfigureServices((context, services) =>
+            {
+                var connectionString = context.Configuration.GetConnectionString("DefaultConnection") ?? new SqliteConnectionStringBuilder() { DataSource = StaticDataService.Instance.PathFullDatabase,Cache = SqliteCacheMode.Shared,Pooling = true }.ConnectionString;
+                context.Configuration["DefaultConnection"] = connectionString;
+
+                services.AddDbContextFactory<ApplicationDbContext>(options => options.UseSqlite(connectionString));
+                services.AddTransient<IDataService, DataService>();
+
+                services.AddSingleton<INavigationService, NavigationService>();
+                services.AddSingleton<NavigationStore>();
+                services.AddSingleton<AzureDevOpsService>();
+                services.AddSingleton<SettingsService>();
+
+                services.AddSingleton<MainViewModel>();
+                services.AddSingleton<HomeViewModel>();
+                services.AddTransient<SettingsViewModel>();
+                services.AddSingleton<TimelineViewModel>();
+
+                //services.AddHostedService<ApplicationHostService>();
+
+                //services.AddSingleton<IConverterService, ConverterService>();
+
+                //services.AddSingleton<IStaticSettingService, StaticSettingService>();
+
+                services.AddSingleton<IStatusService, StatusService>();
+                services.AddSingleton<IConverterService, ConverterService>();
+
+                //services.AddSingleton<IEnvironmentService, EnvironmentService>();
+
+                // Service containing navigation, same as INavigationWindow... but without window
+                services.AddSingleton<INavigationService, NavigationService>();
+
+                // Main window with navigation
+                services.AddSingleton<MainWindow>();
+
+                services.AddSingleton(sp => new MainWindow
+                {
+                    DataContext = sp.GetRequiredService<MainViewModel>()
+                });
+
+            }).Build();
+            SetupExceptionHandling();
+            _host.StartAsync().Wait();
+            using (var scope = _host.Services.CreateScope())
+            {
+                var services = scope.ServiceProvider;
+
+                var context = services.GetRequiredService<ApplicationDbContext>();
+                context.Database.EnsureCreated();
+                // DbInitializer.Initialize(context);
+            }
+            var mainWindow = _host.Services.GetRequiredService<MainWindow>();
+            mainWindow.Show();
+         
+            //ApplicationThemeManager.ApplySystemTheme();
+        }
+
+        /// <summary>
+        /// Occurs when the application is closing.
+        /// </summary>
+        private void OnExit(object sender, ExitEventArgs e)
+        {
+            _host.StopAsync().Wait();
+            _host.Dispose();
+        }
+
+        /// <summary>
+        /// Occurs when an exception is thrown by an application but not handled.
+        /// </summary>
+        public void OnDispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
+        {
+            var status_service = GetService<IStatusService>();
+            if (status_service != null)
+            {
+                status_service.SendStatus(e.Exception);
+                e.Handled = true;
+            }
+        }
+
+        private void SetupExceptionHandling()
+        {
+            AppDomain.CurrentDomain.UnhandledException += (s, e) =>
+                LogUnhandledException((Exception)e.ExceptionObject, "AppDomain.CurrentDomain.UnhandledException");
+
+            DispatcherUnhandledException += (s, e) =>
+            {
+                LogUnhandledException(e.Exception, "Application.Current.DispatcherUnhandledException");
+                e.Handled = true;
+            };
+
+            TaskScheduler.UnobservedTaskException += (s, e) =>
+            {
+                LogUnhandledException(e.Exception, "TaskScheduler.UnobservedTaskException");
+                e.SetObserved();
+            };
+        }
+
+        private void LogUnhandledException(Exception exception, string source)
+        {
+            var status_service = GetService<IStatusService>();
+            string message = $"Unhandled exception ({source})";
+            try
+            {
+                System.Reflection.AssemblyName assemblyName = System.Reflection.Assembly.GetExecutingAssembly().GetName();
+                message = string.Format("Unhandled exception in {0} v{1}", assemblyName.Name, assemblyName.Version);
+            }
+            catch (Exception ex)
+            {
+                status_service.SendStatus(ex);
+            }
+            finally
+            {
+                status_service.SendStatus(BalloonIcon.Error,"Error", $"{message}\n{exception.Message}");
+            }
+        }
+
+        private void Application_Startup(object sender, StartupEventArgs e)
+        {
+
         }
     }
 

@@ -1,0 +1,56 @@
+﻿<UserControl x:Class="Ma.TimeManagement.Views.SettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" 
+             xmlns:vm="clr-namespace:Ma.TimeManagement.ViewModels" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="20"/>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="10"/>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="10"/>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="10"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="10"/>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="10"/>
+            <RowDefinition Height="auto"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="auto"/>
+            <ColumnDefinition Width="10"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="10"/>
+            <ColumnDefinition Width="auto"/>
+        </Grid.ColumnDefinitions>
+        <StackPanel Grid.Row="0" Grid.ColumnSpan="4" HorizontalAlignment="Left" VerticalAlignment="Center">
+            <TextBlock Text="Settings" FontSize="24"/>
+        </StackPanel>
+        <Label Grid.Row="2" Grid.Column="0" VerticalAlignment="Center" Content="Server:" />
+        <TextBox Grid.Row="2" Grid.Column="2" VerticalAlignment="Center" IsReadOnly="True" Text="{Binding ServerUrl}"/>
+        <Label Grid.Row="4" Grid.Column="0" VerticalAlignment="Center" Content="Collection:"/>
+        <TextBox Grid.Row="4" Grid.Column="2" VerticalAlignment="Center" IsReadOnly="True"  Text="{Binding Collection}"/>
+        <Label Grid.Row="6" Grid.Column="0" VerticalAlignment="Center" Content="PAT:"/>
+        <PasswordBox Grid.Row="6" Grid.Column="2" VerticalAlignment="Center" x:Name="PatBox" PasswordChanged="PatBox_PasswordChanged"/>
+        <Button Grid.Row="6" Grid.Column="4" VerticalAlignment="Center" Content="Connect" Command="{Binding ConnectCommand}"/>
+        <GroupBox Grid.Row="8" Grid.Column="0" Header="Projects" Grid.ColumnSpan="6">
+            <Grid Margin="10">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <ToggleButton Grid.Row="0" Content="All of projects" IsChecked="{Binding IsAllOfProject}" />
+                <ListBox Grid.Row="1" ItemsSource="{Binding Projects}" MinHeight="100">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <CheckBox Content="{Binding Title}" IsChecked="{Binding IsChecked}"></CheckBox>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+            </Grid>
+        </GroupBox>
+    </Grid>
+</UserControl>
