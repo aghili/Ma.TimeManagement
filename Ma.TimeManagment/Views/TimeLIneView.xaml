@@ -82,34 +82,37 @@
                 <!-- Timeline Tracks -->
                 <Canvas Width="{Binding DataContext.TimelineWidth, ElementName=Root}"
                         Height="600" Margin="0,15,0,0">
-
-                    <ItemsControl ItemsSource="{Binding Items}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition/>
+                            <ColumnDefinition/>
+                        </Grid.ColumnDefinitions>
+                        <ItemsControl Grid.Column="0" ItemsSource="{Binding Items}">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
-                                <Canvas Width="{Binding DataContext.TimelineWidth, ElementName=Root}" Height="600"/>
+                                <Canvas Width="{Binding DataContext.TimelineWidth, ElementName=Root}" Height="300"/>
                             </ItemsPanelTemplate>
                         </ItemsControl.ItemsPanel>
 
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <Border Background="{Binding Background}"
+                                <Button Background="{Binding Background}"
                                         Padding="18,12"
                                         MinHeight="70"
-                                        MaxHeight="70"
                                         ToolTip="{Binding Title}"
                                         Cursor="Hand">
 
                                     <!-- Width -->
-                                    <Border.Width>
+                                    <Button.Width>
                                         <MultiBinding Converter="{StaticResource DurationToWidth}">
                                             <Binding Path="StartTime"/>
                                             <Binding Path="EndTime"/>
                                             <Binding Path="DataContext.Zoom" ElementName="Root"/>
                                         </MultiBinding>
-                                    </Border.Width>
+                                    </Button.Width>
 
                                     <!-- Position -->
-                                    <Border.RenderTransform>
+                                    <Button.RenderTransform>
                                         <TranslateTransform>
                                             <TranslateTransform.X>
                                                 <MultiBinding Converter="{StaticResource TimeToXMulti}">
@@ -117,13 +120,9 @@
                                                     <Binding Path="DataContext.Zoom" ElementName="Root"/>
                                                 </MultiBinding>
                                             </TranslateTransform.X>
-                                            <TranslateTransform.Y>
-                                                <Binding Path="(ItemsControl.AlternationIndex)"
-                                                         RelativeSource="{RelativeSource AncestorType=ContentPresenter}"
-                                                         Converter="{StaticResource TrackY}"/>
-                                            </TranslateTransform.Y>
+
                                         </TranslateTransform>
-                                    </Border.RenderTransform>
+                                    </Button.RenderTransform>
 
                                     <Grid>
                                         <Grid.ColumnDefinitions>
@@ -159,12 +158,26 @@
            VerticalAlignment="Center"/>
 
                                     </Grid>
-                                </Border>
+                                </Button>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
 
                         <ItemsControl.AlternationCount>50</ItemsControl.AlternationCount>
                     </ItemsControl>
+                    <Grid Grid.Column="1">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <Button Grid.Row="0" Content="START" Height="100"/>
+                        <Button Grid.Row="1" Content="MANUAL" Height="100"/>
+
+                    </Grid>
+                    </Grid>
                 </Canvas>
             </StackPanel>
         </ScrollViewer>
