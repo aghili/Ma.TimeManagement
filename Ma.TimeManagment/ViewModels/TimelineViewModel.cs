@@ -176,6 +176,7 @@ namespace Ma.TimeManagement.ViewModels
             if (result == true && vm.SelectedTask != null && vm.SelectedWorkCalendarItem != null)
             {
                 vm.SelectedWorkCalendarItem.Synced = true;
+                vm.SelectedWorkCalendarItem.DurationHour = vm.Duration;
                 var item = await dataService.AddOrUpdateAsync(vm.SelectedTask.Id, vm.SelectedWorkCalendarItem);
                 await AddTaskToTimelineAsync(item);
                 TaskStarted?.Invoke(this, vm.SelectedTask);

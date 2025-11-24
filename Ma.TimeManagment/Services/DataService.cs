@@ -336,13 +336,13 @@ namespace Ma.TimeManagement.Services
         public async Task<WorkCalendarItem?> GetWorkCalendarItemLastAsync()
         {
             using var applicationDbContext = await dbContextFactory.CreateDbContextAsync();
-            return await applicationDbContext.WorkCalendarItems.Where(i => i.StartTime.Date == DateTime.Today).OrderBy(i=>i.Id).LastOrDefaultAsync();
+            return await applicationDbContext.WorkCalendarItems.Where(i => i.StartTime.Date == DateTime.Today && !i.Synced).OrderBy(i=>i.StartTime).LastOrDefaultAsync();
         }
 
         public WorkCalendarItem? GetWorkCalendarItemLast()
         {
             using var applicationDbContext = dbContextFactory.CreateDbContext();
-            return applicationDbContext.WorkCalendarItems.Where(i => i.StartTime.Date == DateTime.Today).OrderBy(i => i.Id).LastOrDefault();
+            return applicationDbContext.WorkCalendarItems.Where(i => i.StartTime.Date == DateTime.Today && !i.Synced).OrderBy(i => i.StartTime).LastOrDefault();
         }
 
         public IEnumerable<WorkCalendarItem> GetWorkCalendarItemsNotSynced()

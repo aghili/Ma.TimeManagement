@@ -42,24 +42,19 @@ namespace Ma.TimeManagement.Services
             }
         }
 
+        public override async Task StopAsync(CancellationToken cancellationToken)
+        {
+            await SyncToAzure(null);
+
+            await base.StopAsync(cancellationToken);
+        }
+
         private async Task DoWork(CancellationToken stoppingToken)
         {
             try
             {
                 WorkCalendarItem? WorkCalendarItemLast = await dataService.GetWorkCalendarItemLastAsync();
-                IEnumerable<WorkCalendarItem> workCalendarItems = await dataService.GetWorkCalendarItemsNotSyncedAsync();
-                IEnumerable<WorkCalendarItem> Durations = [.. workCalendarItems];
-                if (WorkCalendarItemLast != null)
-                    Durations = [.. Durations.Where(i => i.Id != i.Id)];
-                var DurationHours = Durations.GroupBy(i => i.WorkItemID).Select(i => new { WorkItemID = i.Key, DurationHour = i.Sum(d => d.DurationHour) }).ToList();
-                foreach (var item in DurationHours)
-                {
-                    if (item.WorkItemID != null)
-                        continue;
-                    await azureDevOpsService.WorkItemAddWorkCompleteAsync(item.WorkItemID ?? 0, item.DurationHour);
-                    foreach (var workCalendarItem in workCalendarItems.Where(i => i.WorkItemID == item.WorkItemID))
-                        await dataService.SetworkCalendarItemSyncedAsync(workCalendarItem.Id);
-                }
+                await SyncToAzure(WorkCalendarItemLast);
 
                 if (WorkCalendarItemLast != null)
                 {
@@ -67,9 +62,12 @@ namespace Ma.TimeManagement.Services
                     if (DurationHour != WorkCalendarItemLast.DurationHour)
                     {
                         await dataService.SetWorkCalendarItemDurationHourAsync(WorkCalendarItemLast.Id, DurationHour);
-                       statusService.RefreshItem(WorkCalendarItemLast);
+                        statusService.RefreshItem(WorkCalendarItemLast);
                     }
                 }
+            }
+            catch (OperationCanceledException) {
+                await SyncToAzure(null);
             }
             catch (Exception ex)
             {
@@ -77,6 +75,23 @@ namespace Ma.TimeManagement.Services
                 await Task.Delay(TimeSpan.FromSeconds(10), stoppingToken);
             }
             _logger.LogInformation("Timed Hosted Service is working.");
+        }
+
+        private async Task SyncToAzure(WorkCalendarItem? WorkCalendarItemLast)
+        {
+            IEnumerable<WorkCalendarItem> workCalendarItems = await dataService.GetWorkCalendarItemsNotSyncedAsync();
+            IEnumerable<WorkCalendarItem> Durations = [.. workCalendarItems];
+            if (WorkCalendarItemLast != null)
+                Durations = [.. Durations.Where(i => i.Id != i.Id)];
+            var DurationHours = Durations.GroupBy(i => i.WorkItemID).Select(i => new { WorkItemID = i.Key, DurationHour = i.Sum(d => d.DurationHour) }).ToList();
+            foreach (var item in DurationHours)
+            {
+                if (item.WorkItemID != null)
+                    continue;
+                await azureDevOpsService.WorkItemAddWorkCompleteAsync(item.WorkItemID ?? 0, item.DurationHour);
+                foreach (var workCalendarItem in workCalendarItems.Where(i => i.WorkItemID == item.WorkItemID))
+                    await dataService.SetworkCalendarItemSyncedAsync(workCalendarItem.Id);
+            }
         }
 
         private double ComputeDurationTime(DateTime startTime, DateTime now)
