@@ -69,5 +69,6 @@ namespace Ma.TimeManagement.ViewModels.Design
         public IRelayCommand ResetCommand { get; }
 
         public IRelayCommand StartTaskCommand { get; }
+        public IRelayCommand InsertTaskCommand { get; }
     }
 }

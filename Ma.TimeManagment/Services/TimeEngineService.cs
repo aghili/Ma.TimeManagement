@@ -10,10 +10,12 @@ namespace Ma.TimeManagement.Services
         private readonly IStatusService statusService;
         private readonly IAzureDevOpsService azureDevOpsService;
         private readonly ILogger<TimeEngineService> _logger;
+        private readonly IConverterService converterService;
         private int _executionCount;
-        public TimeEngineService(ILogger<TimeEngineService> logger, IDataService dataService, IStatusService statusService, IAzureDevOpsService azureDevOpsService)
+        public TimeEngineService(ILogger<TimeEngineService> logger,IConverterService converterService, IDataService dataService, IStatusService statusService, IAzureDevOpsService azureDevOpsService)
         {
             _logger = logger;
+            this.converterService = converterService;
             this.dataService = dataService;
             this.statusService = statusService;
             this.azureDevOpsService = azureDevOpsService;
@@ -65,7 +67,7 @@ namespace Ma.TimeManagement.Services
                     if (DurationHour != WorkCalendarItemLast.DurationHour)
                     {
                         await dataService.SetWorkCalendarItemDurationHourAsync(WorkCalendarItemLast.Id, DurationHour);
-                        statusService.RefreshItem(WorkCalendarItemLast);
+                       statusService.RefreshItem(WorkCalendarItemLast);
                     }
                 }
             }
@@ -80,7 +82,7 @@ namespace Ma.TimeManagement.Services
         private double ComputeDurationTime(DateTime startTime, DateTime now)
         {
             var increment = now - startTime;
-            var TotalHours = Math.Round((increment.TotalHours) * 4, MidpointRounding.ToPositiveInfinity) / 4;
+            var TotalHours =converterService.ConvertHourToRounded(increment.TotalHours);
             return TotalHours;
         }
     }

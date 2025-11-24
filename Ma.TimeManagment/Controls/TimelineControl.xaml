@@ -24,70 +24,77 @@
     </UserControl.Resources>
 
     <Grid>
-        <ScrollViewer HorizontalScrollBarVisibility="Auto"
+        <Grid.RowDefinitions>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <StackPanel Grid.Row="0" Margin="10" Orientation="Horizontal">
+
+            <Button Grid.Column="0" Content="START" Command="{Binding StartTaskCommand}"/>
+            <Button Grid.Column="1" Content="INSERT" Command="{Binding InsertTaskCommand}"/>
+
+        </StackPanel>
+        <Grid  Grid.Row="1">
+    
+            <ScrollViewer HorizontalScrollBarVisibility="Auto"
                       VerticalScrollBarVisibility="Disabled"
                       PanningMode="HorizontalOnly">
 
-            <StackPanel HorizontalAlignment="Left">
-                <!-- Time Ruler (08:00 – 22:00) -->
-                <Border Height="60" Background="#252526" BorderBrush="#444" BorderThickness="0,0,0,1">
-                    <Canvas Width="{Binding DataContext.TimelineWidth, ElementName=Root}">
-                        <ItemsControl ItemsSource="{Binding Source=8, Converter={StaticResource HourRange}}">
-                            <ItemsControl.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <Canvas/>
-                                </ItemsPanelTemplate>
-                            </ItemsControl.ItemsPanel>
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <Grid>
-                                        <!-- Hour Line -->
-                                        <Line Y1="0" Y2="60"
+                <StackPanel HorizontalAlignment="Left">
+                    <!-- Time Ruler (08:00 – 22:00) -->
+                    <Border Height="60" Background="#252526" BorderBrush="#444" BorderThickness="0,0,0,1">
+                        <Canvas Width="{Binding DataContext.TimelineWidth, ElementName=Root}">
+                            <ItemsControl ItemsSource="{Binding Source=8, Converter={StaticResource HourRange}}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <Canvas/>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid>
+                                            <!-- Hour Line -->
+                                            <Line Y1="0" Y2="60"
                                           Stroke="#666" StrokeThickness="1">
-                                            <Line.X1>
-                                                <MultiBinding Converter="{StaticResource TimeToXMulti}">
-                                                    <Binding Path="."/>
-                                                    <Binding Path="DataContext.Zoom" ElementName="Root"/>
-                                                </MultiBinding>
-                                            </Line.X1>
-                                            <Line.X2>
-                                                <MultiBinding Converter="{StaticResource TimeToXMulti}">
-                                                    <Binding Path="."/>
-                                                    <Binding Path="DataContext.Zoom" ElementName="Root"/>
-                                                </MultiBinding>
-                                            </Line.X2>
-                                        </Line>
+                                                <Line.X1>
+                                                    <MultiBinding Converter="{StaticResource TimeToXMulti}">
+                                                        <Binding Path="."/>
+                                                        <Binding Path="DataContext.Zoom" ElementName="Root"/>
+                                                    </MultiBinding>
+                                                </Line.X1>
+                                                <Line.X2>
+                                                    <MultiBinding Converter="{StaticResource TimeToXMulti}">
+                                                        <Binding Path="."/>
+                                                        <Binding Path="DataContext.Zoom" ElementName="Root"/>
+                                                    </MultiBinding>
+                                                </Line.X2>
+                                            </Line>
 
-                                        <!-- Hour Label -->
-                                        <TextBlock Text="{Binding StringFormat=HH:mm}"
+                                            <!-- Hour Label -->
+                                            <TextBlock Text="{Binding StringFormat=HH:mm}"
                                                Foreground="#CCCCCC" FontSize="13" FontWeight="Medium"
                                                Margin="6,32,0,0">
-                                            <TextBlock.RenderTransform>
-                                                <TranslateTransform>
-                                                    <TranslateTransform.X>
-                                                        <MultiBinding Converter="{StaticResource TimeToXMulti}">
-                                                            <Binding Path="."/>
-                                                            <Binding Path="DataContext.Zoom" ElementName="Root"/>
-                                                        </MultiBinding>
-                                                    </TranslateTransform.X>
-                                                </TranslateTransform>
-                                            </TextBlock.RenderTransform>
-                                        </TextBlock>
-                                    </Grid>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                    </Canvas>
-                </Border>
+                                                <TextBlock.RenderTransform>
+                                                    <TranslateTransform>
+                                                        <TranslateTransform.X>
+                                                            <MultiBinding Converter="{StaticResource TimeToXMulti}">
+                                                                <Binding Path="."/>
+                                                                <Binding Path="DataContext.Zoom" ElementName="Root"/>
+                                                            </MultiBinding>
+                                                        </TranslateTransform.X>
+                                                    </TranslateTransform>
+                                                </TextBlock.RenderTransform>
+                                            </TextBlock>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </Canvas>
+                    </Border>
 
-                <!-- Timeline Tracks -->
-                <Canvas Width="{Binding DataContext.TimelineWidth, ElementName=Root}"
+                    <!-- Timeline Tracks -->
+                    <Canvas Width="{Binding DataContext.TimelineWidth, ElementName=Root}"
                         Height="600" Margin="0,15,0,0">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition/>
-                            <ColumnDefinition/>
-                        </Grid.ColumnDefinitions>
                         <ItemsControl Grid.Column="0" ItemsSource="{Binding Items}">
                             <ItemsControl.ItemsPanel>
                                 <ItemsPanelTemplate>
@@ -114,14 +121,13 @@
 
                                         <!-- Position -->
                                         <Button.RenderTransform>
-                                            <TranslateTransform>
+                                            <TranslateTransform Y="{Binding LineNumber , Converter={StaticResource TrackY}}">
                                                 <TranslateTransform.X>
                                                     <MultiBinding Converter="{StaticResource TimeToXMulti}">
                                                         <Binding Path="StartTime"/>
                                                         <Binding Path="DataContext.Zoom" ElementName="Root"/>
                                                     </MultiBinding>
                                                 </TranslateTransform.X>
-
                                             </TranslateTransform>
                                         </Button.RenderTransform>
 
@@ -165,52 +171,40 @@
 
                             <ItemsControl.AlternationCount>50</ItemsControl.AlternationCount>
                         </ItemsControl>
-                        <Grid Grid.Column="1">
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="*"/>
-                                <RowDefinition Height="*"/>
-                            </Grid.RowDefinitions>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
+                    </Canvas>
+                </StackPanel>
+            </ScrollViewer>
 
-                            <Button Grid.Row="0" Content="START" Command="{Binding StartTaskCommand}" Height="100"/>
-                            <Button Grid.Row="1" Content="MANUAL" Height="100"/>
-
-                        </Grid>
-                    </Grid>
-                </Canvas>
-            </StackPanel>
-        </ScrollViewer>
-
-        <!-- Zoom Controls -->
-        <StackPanel Orientation="Horizontal"
+            <!-- Zoom Controls -->
+            <StackPanel Grid.Row="1" Orientation="Horizontal"
                     HorizontalAlignment="Right"
                     VerticalAlignment="Bottom"
                     Margin="24"
                     Background="#CC000000">
-            <Button Content="−" Width="48" Height="48" Margin="4" FontSize="24" FontWeight="Bold"
+                <Button Content="−" Width="48" Height="48" Margin="4" FontSize="24" FontWeight="Bold"
                     Command="{Binding ZoomOutCommand}"/>
-            <Button Content="Reset" Width="90" Height="48" Margin="4" FontWeight="Medium"
+                <Button Content="Reset" Width="90" Height="48" Margin="4" FontWeight="Medium"
                     Command="{Binding ResetCommand}"/>
-            <Button Content="+" Width="48" Height="48" Margin="4" FontSize="24" FontWeight="Bold"
+                <Button Content="+" Width="48" Height="48" Margin="4" FontSize="24" FontWeight="Bold"
                     Command="{Binding ZoomInCommand}"/>
-        </StackPanel>
+            </StackPanel>
 
-        <!-- Current Time Indicator (Optional Bonus) -->
-        <Line X1="0" X2="0" Y1="0" Y2="{Binding ActualHeight, ElementName=Root}"
+            <!-- Current Time Indicator (Optional Bonus) -->
+            <Line X1="0" X2="0" Y1="0" Y2="{Binding ActualHeight, ElementName=Root}"
               Stroke="Red" StrokeThickness="2" Opacity="0.7"
               RenderTransformOrigin="0,0">
-            <Line.RenderTransform>
-                <TranslateTransform>
-                    <TranslateTransform.X>
-                        <MultiBinding Converter="{StaticResource TimeToXMulti}">
-                            <Binding Source="{x:Static system:DateTime.Now}"/>
-                            <Binding Path="DataContext.Zoom" ElementName="Root"/>
-                        </MultiBinding>
-                    </TranslateTransform.X>
-                </TranslateTransform>
-            </Line.RenderTransform>
-        </Line>
+                <Line.RenderTransform>
+                    <TranslateTransform>
+                        <TranslateTransform.X>
+                            <MultiBinding Converter="{StaticResource TimeToXMulti}">
+                                <Binding Source="{x:Static system:DateTime.Now}"/>
+                                <Binding Path="DataContext.Zoom" ElementName="Root"/>
+                            </MultiBinding>
+                        </TranslateTransform.X>
+                    </TranslateTransform>
+                </Line.RenderTransform>
+            </Line>
+        </Grid>
+
     </Grid>
 </UserControl>

@@ -6,6 +6,12 @@ namespace Ma.TimeManagement.Services
     public class ConverterService : IConverterService
     {
         public ConverterService() { }
+
+        public double ConvertHourToRounded(double hour)
+        {
+            return Math.Round((hour) * 4, MidpointRounding.ToPositiveInfinity) / 4;
+        }
+
         public WorkItem ConvertTo(Microsoft.TeamFoundation.WorkItemTracking.WebApi.Models.WorkItem Item)
         {
             return new()

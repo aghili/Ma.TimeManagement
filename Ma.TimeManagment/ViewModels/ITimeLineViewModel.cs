@@ -16,6 +16,7 @@ namespace Ma.TimeManagement.ViewModels
         public IRelayCommand ZoomOutCommand { get; }
         public IRelayCommand ResetCommand { get; }
         public IRelayCommand StartTaskCommand { get; }
+        public IRelayCommand InsertTaskCommand { get; }
 
     }
 }

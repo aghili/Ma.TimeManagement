@@ -8,12 +8,12 @@ namespace Ma.TimeManagement.Services
         IEnumerable<TeamProjectReference> GetTeamProjects();
         Task<IEnumerable<WorkItem>> GetWorkItemsAsync();
         IEnumerable<WorkItem> GetWorkItems();
-        Task AddOrUpdateAsync(Guid ProjectID, WorkItem item);
-        void AddOrUpdate(Guid ProjectID, WorkItem item);
-        Task AddOrUpdateAsync(int WorkItemID,WorkCalendarItem item);
-        void AddOrUpdate(int WorkItemID, WorkCalendarItem item);
-        Task AddOrUpdateAsync(TeamProjectReference item);
-        void AddOrUpdate(TeamProjectReference item);
+        Task<WorkItem> AddOrUpdateAsync(Guid ProjectID, WorkItem item);
+        WorkItem AddOrUpdate(Guid ProjectID, WorkItem item);
+        Task<WorkCalendarItem> AddOrUpdateAsync(int WorkItemID,WorkCalendarItem item);
+        WorkCalendarItem AddOrUpdate(int WorkItemID, WorkCalendarItem item);
+        Task<TeamProjectReference> AddOrUpdateAsync(TeamProjectReference item);
+        TeamProjectReference AddOrUpdate(TeamProjectReference item);
         Task<WorkItem?> GetWorkItemAsync(int Id);
         WorkItem? GetWorkItem(int Id);
         Task<WorkCalendarItem?> GetWorkCalendarItemAsync(int Id);
@@ -34,5 +34,7 @@ namespace Ma.TimeManagement.Services
         void SetworkCalendarItemSynced(int id);
         Task SetWorkCalendarItemDurationHourAsync(int workItemID, double durationHour);
         void SetWorkCalendarItemDurationHour(int ID, double durationHour);
+        IEnumerable<WorkCalendarItem> GetWorkCalendarFreeItemsDaily();
+        Task<IEnumerable<WorkCalendarItem>> GetWorkCalendarFreeItemsDailyAsync();
     }
 }

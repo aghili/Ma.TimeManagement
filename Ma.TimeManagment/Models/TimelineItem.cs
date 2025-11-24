@@ -11,6 +11,7 @@ namespace Ma.TimeManagement.Models
         public object? Tag { get; set; }
         public Brush Background { get; set; } = new SolidColorBrush(Colors.CornflowerBlue);
         public int TaskId { get; internal set; }
+        public int LineNumber { get; set; } = 0;
         public string ProjectName { get; internal set; }
     }
 }

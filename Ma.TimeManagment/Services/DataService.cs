@@ -8,11 +8,13 @@ namespace Ma.TimeManagement.Services
     public class DataService : IDataService
     {
         private readonly IDbContextFactory<ApplicationDbContext> dbContextFactory;
+        private readonly IConverterService converterService;
         private readonly IStatusService statusService;
 
-        public DataService(IDbContextFactory<ApplicationDbContext> dbContextFactory, IStatusService statusService)
+        public DataService(IDbContextFactory<ApplicationDbContext> dbContextFactory,IConverterService converterService, IStatusService statusService)
         {
             this.dbContextFactory = dbContextFactory;
+            this.converterService = converterService;
             this.statusService = statusService;
         }
 
@@ -40,7 +42,7 @@ namespace Ma.TimeManagement.Services
             return [.. applicationDbContext.WorkItems];
         }
 
-        public async Task AddOrUpdateAsync(TeamProjectReference item)
+        public async Task<TeamProjectReference> AddOrUpdateAsync(TeamProjectReference item)
         {
             using var applicationDbContext = await dbContextFactory.CreateDbContextAsync();
             TeamProjectReference? entity;
@@ -58,8 +60,9 @@ namespace Ma.TimeManagement.Services
             {
                 statusService.SendStatus(ex);
             }
+            return item;
         }
-        public void AddOrUpdate(TeamProjectReference item)
+        public TeamProjectReference AddOrUpdate(TeamProjectReference item)
         {
             using var applicationDbContext = dbContextFactory.CreateDbContext();
             TeamProjectReference? entity;
@@ -77,6 +80,7 @@ namespace Ma.TimeManagement.Services
             {
                 statusService.SendStatus(ex);
             }
+            return item;
         }
 
         private static void SetProperties(TeamProjectReference item, TeamProjectReference entity)
@@ -95,7 +99,7 @@ namespace Ma.TimeManagement.Services
             entity.Url = item.Url;
         }
 
-        public async Task AddOrUpdateAsync(Guid ProjectID, WorkItem item)
+        public async Task<WorkItem> AddOrUpdateAsync(Guid ProjectID, WorkItem item)
         {
             using var applicationDbContext = await dbContextFactory.CreateDbContextAsync();
             WorkItem? entity;
@@ -120,9 +124,10 @@ namespace Ma.TimeManagement.Services
             {
                 statusService.SendStatus(ex);
             }
+            return item;
         }
 
-        public void AddOrUpdate(Guid ProjectID, WorkItem item)
+        public WorkItem AddOrUpdate(Guid ProjectID, WorkItem item)
         {
             using var applicationDbContext = dbContextFactory.CreateDbContext();
             WorkItem? entity;
@@ -147,6 +152,7 @@ namespace Ma.TimeManagement.Services
             {
                 statusService.SendStatus(ex);
             }
+            return item;
         }
 
         private static void SetProperties(WorkItem item, WorkItem entity)
@@ -218,7 +224,7 @@ namespace Ma.TimeManagement.Services
         }
 
 
-        public async Task AddOrUpdateAsync(int WorkItemID, WorkCalendarItem item)
+        public async Task<WorkCalendarItem> AddOrUpdateAsync(int WorkItemID, WorkCalendarItem item)
         {
             PerpareItem(item);
             using var applicationDbContext = await dbContextFactory.CreateDbContextAsync();
@@ -244,9 +250,10 @@ namespace Ma.TimeManagement.Services
             {
                 statusService.SendStatus(ex);
             }
+            return item;
         }
 
-        public void AddOrUpdate(int WorkItemID, WorkCalendarItem item)
+        public WorkCalendarItem AddOrUpdate(int WorkItemID, WorkCalendarItem item)
         {
             PerpareItem(item);
             using var applicationDbContext = dbContextFactory.CreateDbContext();
@@ -272,6 +279,7 @@ namespace Ma.TimeManagement.Services
             {
                 statusService.SendStatus(ex);
             }
+            return item;
         }
 
         private static void SetProperties(WorkCalendarItem item, WorkCalendarItem entity)
@@ -382,6 +390,36 @@ namespace Ma.TimeManagement.Services
                 return;
             item.DurationHour = durationHour;
             AddOrUpdate(item.WorkItemID ?? 0, item);
+        }
+
+        public IEnumerable<WorkCalendarItem> GetWorkCalendarFreeItemsDaily()
+        {
+            throw new NotImplementedException();
+        }
+
+        public async Task<IEnumerable<WorkCalendarItem>> GetWorkCalendarFreeItemsDailyAsync()
+        {
+            using var applicationDbContext = await dbContextFactory.CreateDbContextAsync();
+            var Tasks = await applicationDbContext.WorkCalendarItems
+                .Where(i => i.StartTime >= DateTime.Today && i.StartTime < DateTime.Now.AddDays(1).Date)
+                .OrderBy(i=>i.StartTime)
+                .ToListAsync();
+            if (Tasks.Count == 0)
+                return [new() { StartTime = DateTime.Today.AddHours(8) }];
+            List<WorkCalendarItem> results = [];
+            DateTime lastDate = DateTime.Today.AddHours(8);
+            double Duration = 0;
+            foreach (var item in Tasks)
+            {
+                Duration = (item.StartTime - lastDate).TotalHours;
+                if (Duration <= 0)
+                    continue;
+                results.Add(new(){ StartTime =lastDate,DurationHour =converterService.ConvertHourToRounded(Duration) });
+                lastDate = item.StartTime.AddHours(item.DurationHour);
+            }
+            Duration = (DateTime.Today.AddHours(22)- lastDate).TotalHours;
+            results.Add(new() { StartTime = lastDate, DurationHour = converterService.ConvertHourToRounded(Duration) });
+            return results;
         }
     }
 }
