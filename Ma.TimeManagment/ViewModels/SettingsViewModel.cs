@@ -9,13 +9,13 @@ namespace Ma.TimeManagement.ViewModels
     public partial class SettingsViewModel : ObservableObject
     {
         private readonly INavigationService _navigationService;
-        private readonly AzureDevOpsService azureDevOpsService;
-        private readonly SettingsService settingsService;
+        private readonly IAzureDevOpsService azureDevOpsService;
+        private readonly ISettingsService settingsService;
         private readonly IStatusService statusService;
 
         public AzureServerItemModel Server { get; }
 
-        public SettingsViewModel(INavigationService navigationService,AzureDevOpsService azureDevOpsService,SettingsService settingsService,IStatusService statusService)
+        public SettingsViewModel(INavigationService navigationService,IAzureDevOpsService azureDevOpsService,ISettingsService settingsService,IStatusService statusService)
         {
             _navigationService = navigationService;
             this.azureDevOpsService = azureDevOpsService;

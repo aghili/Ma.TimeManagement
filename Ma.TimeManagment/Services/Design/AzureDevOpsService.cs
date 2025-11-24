@@ -1,21 +1,10 @@
-﻿using Ma.TimeManagement.Data;
-using Ma.TimeManagement.Models;
-using Ma.TimeManagement.Services.Design;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.TeamFoundation.WorkItemTracking.WebApi;
-using Microsoft.VisualStudio.Services.Common;
-using Microsoft.VisualStudio.Services.WebApi.Patch;
+﻿using Ma.TimeManagement.Models;
 using Microsoft.VisualStudio.Services.WebApi.Patch.Json;
-using System.Threading.Tasks;
 
-namespace Ma.TimeManagement.Services
+namespace Ma.TimeManagement.Services.Design
 {
     public class AzureDevOpsService : IAzureDevOpsService
     {
-        private WorkItemTrackingHttpClient WitClient;
-
-        private Microsoft.TeamFoundation.Core.WebApi.ProjectHttpClient prgClient;
-
         private List<string> Projects { get; set; }
 
         private readonly IStatusService statusService;
@@ -45,29 +34,7 @@ namespace Ma.TimeManagement.Services
 
         public void Initialize(string ServerUrl, string Collection, string project, string Pat)
         {
-            try
-            {
-                CancellationTokenSource cancellationToken = new CancellationTokenSource();
-                cancellationToken.CancelAfter(10000);
-                semaphoreInit.Wait(cancellationToken.Token);
-                var uri = new Uri($"{ServerUrl}/{Collection}");
-                var credentials = new VssBasicCredential(string.Empty, Pat);
-                var connection = new Microsoft.VisualStudio.Services.WebApi.VssConnection(uri, credentials);
-#if !DISABLEAZURE
-                WitClient = connection.GetClient<WorkItemTrackingHttpClient>(cancellationToken.Token);
-                prgClient = connection.GetClient<Microsoft.TeamFoundation.Core.WebApi.ProjectHttpClient>(cancellationToken.Token);
-#else
-#endif
-                Inited = true;
-            }
-            catch (Exception ex)
-            {
-                statusService.SendStatus(ex);
-            }
-            finally
-            {
-                semaphoreInit.Release();
-            }
+            Inited = true;
         }
 
         public IEnumerable<WorkItem> WorkItems
@@ -104,18 +71,11 @@ namespace Ma.TimeManagement.Services
                 return;
             }
             List<TeamProjectReference> Projects = [];
-#if !DISABLEAZURE
-            var projects = await prgClient.GetProjects(null, null, null, null, null, null);
-            foreach (var project in projects)
-            {
-                Projects.Add(converterService.ConvertTo(project));
-            }
-#else
+
             Projects.Add(new() { Id = new Guid("00000000-0000-0000-0000-000000000001"), Name = "Mahak.CoreOps", State = Microsoft.TeamFoundation.Core.WebApi.ProjectState.WellFormed, Visibility = Microsoft.TeamFoundation.Core.WebApi.ProjectVisibility.Organization });
             Projects.Add(new() { Id = new Guid("00000000-0000-0000-0000-000000000002"), Name = "Mahak.Sales", State = Microsoft.TeamFoundation.Core.WebApi.ProjectState.WellFormed, Visibility = Microsoft.TeamFoundation.Core.WebApi.ProjectVisibility.Organization });
             Projects.Add(new() { Id = new Guid("00000000-0000-0000-0000-000000000003"), Name = "Mahak.SMS", State = Microsoft.TeamFoundation.Core.WebApi.ProjectState.WellFormed, Visibility = Microsoft.TeamFoundation.Core.WebApi.ProjectVisibility.Organization });
             Projects.Add(new() { Id = new Guid("00000000-0000-0000-0000-000000000004"), Name = "Mahak.Kiosk", State = Microsoft.TeamFoundation.Core.WebApi.ProjectState.WellFormed, Visibility = Microsoft.TeamFoundation.Core.WebApi.ProjectVisibility.Organization });
-#endif
 
             List<TeamProjectReference> most_remove = [];
 
@@ -147,24 +107,7 @@ namespace Ma.TimeManagement.Services
             foreach (var project in await dataService.GetTeamProjectsAsync())
             {
                 List<int> taskIds = [];
-                var wiql = new Microsoft.TeamFoundation.WorkItemTracking.WebApi.Models.Wiql
-                {
-                    Query = $"SELECT [System.Id]" +
-                          $"FROM workitems WHERE [System.TeamProject] = '{project.Name}' AND [System.WorkItemType] = 'Task' " +
-                          $"AND [System.AssignedTo] = @me AND [System.State] <> 'Closed'"
-                };
-#if !DISABLEAZURE
-                var queryResult = await WitClient.QueryByWiqlAsync(wiql);
 
-                foreach (var workItemRef in queryResult.WorkItems)
-                {
-                    taskIds.Add(workItemRef.Id);
-                }
-                if (taskIds.Count == 0)
-                    continue;
-                var tasks = await WitClient.GetWorkItemsAsync(taskIds, expand: Microsoft.TeamFoundation.WorkItemTracking.WebApi.Models.WorkItemExpand.Fields);
-                Tasks.AddRange(converterService.ConvertTo(tasks));
-#else
                 Tasks.Add(new() { Id = id++, CompletedWork = 5, OriginalEstimate = 50, RemainingWork = 20, ProjectID = project.Id, ProjectName = project.Name, State = EnWorkState.Active, Title = project.Name+"title 1", Url = string.Empty, WorkItemType = EnWorkItemType.Task });
                 Tasks.Add(new() { Id = id++, CompletedWork = 6, OriginalEstimate = 51, RemainingWork = 21, ProjectID = project.Id, ProjectName = project.Name, State = EnWorkState.Active, Title = project.Name+"title 2",Url=string.Empty, WorkItemType = EnWorkItemType.Task });
                 Tasks.Add(new() { Id = id++, CompletedWork = 7, OriginalEstimate = 52, RemainingWork = 22, ProjectID = project.Id, ProjectName = project.Name, State = EnWorkState.Active, Title = project.Name+"title 3",Url=string.Empty, WorkItemType = EnWorkItemType.Task });
@@ -173,7 +116,7 @@ namespace Ma.TimeManagement.Services
                 Tasks.Add(new() { Id = id++, CompletedWork = 10, OriginalEstimate = 55, RemainingWork = 25, ProjectID = project.Id, ProjectName = project.Name, State = EnWorkState.Active, Title = project.Name+"title 6", Url = string.Empty, WorkItemType = EnWorkItemType.Task });
                 Tasks.Add(new() { Id = id++, CompletedWork = 11, OriginalEstimate = 56, RemainingWork = 26, ProjectID = project.Id, ProjectName = project.Name, State = EnWorkState.Active, Title = project.Name+"title 7", Url = string.Empty, WorkItemType = EnWorkItemType.Task });
                 Tasks.Add(new() { Id = id++, CompletedWork = 12, OriginalEstimate = 57, RemainingWork = 27, ProjectID = project.Id, ProjectName = project.Name, State = EnWorkState.Active, Title = project.Name + "title 8",Url=string.Empty, WorkItemType = EnWorkItemType.Task });
-#endif
+
                 foreach (var task in Tasks)
                     await dataService.AddOrUpdateAsync(project.Id, task);
             }
@@ -189,47 +132,26 @@ namespace Ma.TimeManagement.Services
 
         public async Task UpdateWorkItemAsync(JsonPatchDocument patch, int TaskId)
         {
-            await WitClient.UpdateWorkItemAsync(patch, TaskId);
         }
 
         public async Task<WorkItem> GetWorkItemAsync(int TaskId)
         {
-            WorkItem task = converterService.ConvertTo(await WitClient.GetWorkItemAsync(TaskId));
-            await dataService.AddOrUpdateAsync(task.ProjectID, task);
-            return await dataService.GetWorkItemAsync(TaskId) ?? task;
+            return await dataService.GetWorkItemAsync(TaskId);
         }
 
-        public async Task<WorkItem> CreateWorkItemAsync(JsonPatchDocument patch, Guid ProjectID, string type)
+        internal async Task<WorkItem> CreateWorkItemAsync(JsonPatchDocument patch, Guid ProjectID, string type)
         {
-            WorkItem task = converterService.ConvertTo(await WitClient.CreateWorkItemAsync(patch, ProjectID, type));
-            await dataService.AddOrUpdateAsync(ProjectID, task);
-            return await dataService.GetWorkItemAsync(task.Id) ?? task;
+            return null;
         }
 
-        public async Task WorkItemAddWorkCompleteAsync(int workItemID, double durationHour)
+        Task<WorkItem> IAzureDevOpsService.CreateWorkItemAsync(JsonPatchDocument patch, Guid guid, string type)
         {
-            var currentTask = await GetWorkItemAsync(workItemID);
-            var currentCompleted = currentTask.CompletedWork;
-            var currentRemainingWork = currentTask.RemainingWork;
-            var TotalHours = Math.Round((currentCompleted + durationHour) * 4, MidpointRounding.ToPositiveInfinity) / 4;
-            var remainingWork = (currentRemainingWork - TotalHours);
-            remainingWork = Math.Round(remainingWork * 4, MidpointRounding.ToPositiveInfinity) / 4;
+            return CreateWorkItemAsync(patch, guid, type);
+        }
 
-
-            var patch = new JsonPatchDocument();
-            patch.Add(new JsonPatchOperation
-            {
-                Operation = Operation.Add,
-                Path = "/fields/Microsoft.VSTS.Scheduling.CompletedWork",
-                Value = TotalHours
-            });
-            patch.Add(new JsonPatchOperation
-            {
-                Operation = Operation.Add,
-                Path = "/fields/Microsoft.VSTS.Scheduling.RemainingWork",
-                Value = remainingWork < 0 ? 0 : remainingWork
-            });
-            await UpdateWorkItemAsync(patch, workItemID);
+        public Task WorkItemAddWorkCompleteAsync(int workItemID, double durationHour)
+        {
+            throw new NotImplementedException();
         }
     }
 }

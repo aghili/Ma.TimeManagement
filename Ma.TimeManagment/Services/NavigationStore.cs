@@ -2,7 +2,7 @@
 
 namespace Ma.TimeManagement.Services
 {
-    public class NavigationStore : ObservableObject
+    public class NavigationStore : ObservableObject, INavigationStore
     {
         private ObservableObject _currentViewModel;
 

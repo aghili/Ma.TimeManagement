@@ -10,5 +10,7 @@ namespace Ma.TimeManagement.Models
         public DateTime EndTime { get; set; }
         public object? Tag { get; set; }
         public Brush Background { get; set; } = new SolidColorBrush(Colors.CornflowerBlue);
+        public int TaskId { get; internal set; }
+        public string ProjectName { get; internal set; }
     }
 }

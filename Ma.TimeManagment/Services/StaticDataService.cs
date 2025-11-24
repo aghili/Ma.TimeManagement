@@ -2,11 +2,10 @@
 
 namespace Ma.TimeManagement.Services
 {
-    public class StaticDataService { 
-
-        public static StaticDataService Instance { set; internal get; } = new();
-
-        private StaticDataService() {
+    public class StaticDataService : IStaticDataService
+    {
+        public StaticDataService()
+        {
             PathApplicationData = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Ma.TimeManagement");
             PathConfiguration = PathApplicationData;
             PathFullDatabase = Path.Combine(PathApplicationData, "database.db");
@@ -16,7 +15,7 @@ namespace Ma.TimeManagement.Services
                 Directory.CreateDirectory(PathApplicationData);
         }
         public string PathApplicationData { get; set; }
-        public string PathConfiguration {  get; set; }
+        public string PathConfiguration { get; set; }
         public string PathFullDatabase { get; set; }
         public string PathFullSettings { get; set; }
     }

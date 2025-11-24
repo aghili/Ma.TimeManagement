@@ -13,7 +13,7 @@ namespace Ma.TimeManagement.ViewModels
 {
     public partial class CreateWorkItemViewModel : ObservableObject
     {
-        public CreateWorkItemViewModel(INavigationService navigationService,AzureDevOpsService azureDevOpsService,StatusService statusService)
+        public CreateWorkItemViewModel(INavigationService navigationService,IAzureDevOpsService azureDevOpsService,IStatusService statusService)
         {
             this.navigationService = navigationService;
             this.azureDevOpsService = azureDevOpsService;
@@ -35,8 +35,8 @@ namespace Ma.TimeManagement.ViewModels
         [ObservableProperty]
         private string _parentId;
         private readonly INavigationService navigationService;
-        private readonly AzureDevOpsService azureDevOpsService;
-        private readonly StatusService statusService;
+        private readonly IAzureDevOpsService azureDevOpsService;
+        private readonly IStatusService statusService;
 
         [RelayCommand(CanExecute = nameof(CanCreate))]
         private async Task Create()

@@ -67,12 +67,22 @@ namespace Ma.TimeManagement.Migrations
 
             modelBuilder.Entity("Ma.TimeManagement.Models.WorkCalendarItem", b =>
                 {
-                    b.Property<DateTime>("Id")
-                        .HasColumnType("TEXT");
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("TEXT");
+
+                    b.Property<double>("DurationHour")
+                        .HasColumnType("REAL");
+
+                    b.Property<DateTime>("StartTime")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("Synced")
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Title")
                         .IsRequired()

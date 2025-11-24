@@ -3,24 +3,28 @@ using System.IO;
 
 namespace Ma.TimeManagement.Services
 {
-    public class SettingsService
+    public class SettingsService : ISettingsService
     {
         private SettingGeneralModel _general;
+        private readonly IStaticDataService staticDataService;
 
         private SettingGeneralModel General => _general ??= (GetSetting<SettingGeneralModel>() ?? new SettingGeneralModel());
 
         private T? GetSetting<T>()
         {
-            string appsettings_path = StaticDataService.Instance.PathFullSettings;
+            string appsettings_path = staticDataService.PathFullSettings;
 
             if (!File.Exists(appsettings_path)) return default;
             string json = File.ReadAllText(appsettings_path);
             return System.Text.Json.JsonSerializer.Deserialize<T>(json);
         }
 
-        public SettingsService() { }
+        public SettingsService(IStaticDataService staticDataService)
+        {
+            this.staticDataService = staticDataService;
+        }
 
-        public List<AzureServerItemModel> Servers 
+        public List<AzureServerItemModel> Servers
         {
             get
             {
@@ -38,16 +42,16 @@ namespace Ma.TimeManagement.Services
             set
             {
                 General.Servers.Clear();
-                General.Servers.Add(value); 
+                General.Servers.Add(value);
                 AddUpdateAppSettings(General);
             }
 
             get => General.Servers.First();
         }
 
-        private static Task AddUpdateAppSettings(SettingGeneralModel general)
+        private Task AddUpdateAppSettings(SettingGeneralModel general)
         {
-            string appsettings_path = StaticDataService.Instance.PathFullSettings;
+            string appsettings_path = staticDataService.PathFullSettings;
 
             return File.WriteAllTextAsync(appsettings_path, System.Text.Json.JsonSerializer.Serialize(general, new System.Text.Json.JsonSerializerOptions { WriteIndented = true }));
         }

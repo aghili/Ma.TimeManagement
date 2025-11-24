@@ -16,10 +16,10 @@ namespace Ma.TimeManagement.ViewModels
         private ObservableObject currentViewModel;
         [ObservableProperty]
         private string message;
-        private readonly NavigationStore _navigationStore;
+        private readonly INavigationStore _navigationStore;
         private readonly INavigationService _navigationService;
 
-        public MainViewModel(NavigationStore navigationStore, INavigationService navigationService)
+        public MainViewModel(INavigationStore navigationStore, INavigationService navigationService)
         {
             _navigationStore = navigationStore;
             _navigationService = navigationService;
