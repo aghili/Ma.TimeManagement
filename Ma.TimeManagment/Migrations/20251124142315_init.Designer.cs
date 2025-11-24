@@ -11,8 +11,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Ma.TimeManagement.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20251119202614_IgnoreKeys")]
-    partial class IgnoreKeys
+    [Migration("20251124142315_init")]
+    partial class init
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -70,12 +70,22 @@ namespace Ma.TimeManagement.Migrations
 
             modelBuilder.Entity("Ma.TimeManagement.Models.WorkCalendarItem", b =>
                 {
-                    b.Property<DateTime>("Id")
-                        .HasColumnType("TEXT");
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("TEXT");
+
+                    b.Property<double>("DurationHour")
+                        .HasColumnType("REAL");
+
+                    b.Property<DateTime>("StartTime")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("Synced")
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Title")
                         .IsRequired()

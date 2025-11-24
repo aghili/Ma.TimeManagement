@@ -51,6 +51,11 @@ namespace Ma.TimeManagement.Services
             StrongReferenceMessenger.Default.Send(message,EnStatusAction.RefreshTasks.ToString());
         }
 
+        public void RefreshItem(WorkCalendarItem item)
+        {
+            StrongReferenceMessenger.Default.Send(item, EnStatusAction.RefreshItem.ToString());
+        }
+
         public void RegisterRefreshTasks(object Host,Action value)
         {
             StrongReferenceMessenger.Default.Register<StatusModel,string>(Host,EnStatusAction.RefreshTasks.ToString(), (r, m) =>

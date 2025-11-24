@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Drawing;
 using System.IO;
 using System.Reflection;
@@ -15,6 +16,7 @@ using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 //using Wpf.Ui.Appearance;
 
@@ -46,27 +48,35 @@ namespace Ma.TimeManagement
         /// </summary>
         private void OnStartup(object sender, StartupEventArgs e)
         {
+            var staticDataInstance = new StaticDataService();
             _host = Host
             .CreateDefaultBuilder(e.Args)
-            .ConfigureAppConfiguration(c => { c.SetBasePath(StaticDataService.Instance.PathConfiguration); })
+            .ConfigureAppConfiguration(c => { c.SetBasePath(staticDataInstance.PathConfiguration); })
             .ConfigureServices((context, services) =>
             {
-                var connectionString = context.Configuration.GetConnectionString("DefaultConnection") ?? new SqliteConnectionStringBuilder() { DataSource = StaticDataService.Instance.PathFullDatabase,Cache = SqliteCacheMode.Shared,Pooling = true }.ConnectionString;
+                var connectionString = context.Configuration.GetConnectionString("DefaultConnection") ?? new SqliteConnectionStringBuilder() { DataSource = staticDataInstance.PathFullDatabase,Cache = SqliteCacheMode.Shared,Pooling = true }.ConnectionString;
                 context.Configuration["DefaultConnection"] = connectionString;
 
+                services.AddSingleton<IStaticDataService>(staticDataInstance);
                 services.AddDbContextFactory<ApplicationDbContext>(options => options.UseSqlite(connectionString));
                 services.AddTransient<IDataService, DataService>();
 
                 services.AddSingleton<INavigationService, NavigationService>();
-                services.AddSingleton<NavigationStore>();
-                services.AddSingleton<AzureDevOpsService>();
-                services.AddSingleton<SettingsService>();
+                services.AddSingleton<INavigationStore, NavigationStore>();
+#if DEBUGWITHDISABLEAZURE
+                services.AddSingleton<IAzureDevOpsService, Services.Design.AzureDevOpsService>();
+#else
+                services.AddSingleton<IAzureDevOpsService,Services.AzureDevOpsService>();
+
+#endif                
+                services.AddSingleton<ISettingsService,SettingsService>();
 
                 services.AddSingleton<MainViewModel>();
                 services.AddSingleton<HomeViewModel>();
                 services.AddTransient<SettingsViewModel>();
                 services.AddSingleton<TimelineViewModel>();
 
+                services.AddTransient<IDialogService,DialogService>();
                 //services.AddHostedService<ApplicationHostService>();
 
                 //services.AddSingleton<IConverterService, ConverterService>();
@@ -79,7 +89,6 @@ namespace Ma.TimeManagement
                 //services.AddSingleton<IEnvironmentService, EnvironmentService>();
 
                 // Service containing navigation, same as INavigationWindow... but without window
-                services.AddSingleton<INavigationService, NavigationService>();
 
                 // Main window with navigation
                 services.AddSingleton<MainWindow>();
@@ -88,6 +97,8 @@ namespace Ma.TimeManagement
                 {
                     DataContext = sp.GetRequiredService<MainViewModel>()
                 });
+
+                services.AddHostedService<TimeEngineService>();
 
             }).Build();
             SetupExceptionHandling();

@@ -5,10 +5,10 @@ namespace Ma.TimeManagement.Services
 {
     public class NavigationService : INavigationService
     {
-        private readonly NavigationStore _navigationStore;
+        private readonly INavigationStore _navigationStore;
         private readonly IServiceProvider _serviceProvider;
 
-        public NavigationService(NavigationStore navigationStore, IServiceProvider serviceProvider)
+        public NavigationService(INavigationStore navigationStore, IServiceProvider serviceProvider)
         {
             _navigationStore = navigationStore;
             _serviceProvider = serviceProvider;

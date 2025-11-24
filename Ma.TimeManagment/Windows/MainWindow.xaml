@@ -20,7 +20,7 @@
             <view:HomeView />
         </DataTemplate>
         <DataTemplate DataType="{x:Type vm:TimelineViewModel}">
-            <view:TimeLIneView />
+            <view:TimeLineView />
         </DataTemplate>
     </Window.Resources>
 

@@ -24,9 +24,9 @@ namespace Ma.TimeManagement.ViewModels
     public partial class HomeViewModel : ObservableObject
     {
         private readonly INavigationService _navigationService;
-        private readonly AzureDevOpsService azureDevOpsService;
+        private readonly IAzureDevOpsService azureDevOpsService;
 
-        public HomeViewModel(INavigationService navigationService, AzureDevOpsService azureDevOpsService, IStatusService statusService)
+        public HomeViewModel(INavigationService navigationService, IAzureDevOpsService azureDevOpsService, IStatusService statusService)
         {
             _navigationService = navigationService;
             this.azureDevOpsService = azureDevOpsService;
@@ -184,29 +184,7 @@ namespace Ma.TimeManagement.ViewModels
             if (increment.TotalHours <= 0) return;
             try
             {
-                var currentTask = await azureDevOpsService.GetWorkItemAsync(SelectedTask.Id);
-                var currentCompleted = currentTask.CompletedWork;
-                var currentRemainingWork = currentTask.RemainingWork;
-                var TotalHours = Math.Round((currentCompleted + increment.TotalHours) * 4, MidpointRounding.ToPositiveInfinity) / 4;
-                var remainingWork = (currentRemainingWork - TotalHours);
-                remainingWork = Math.Round(remainingWork * 4, MidpointRounding.ToPositiveInfinity) / 4;
-               
-
-                var patch = new JsonPatchDocument();
-                patch.Add(new JsonPatchOperation
-                {
-                    Operation = Operation.Add,
-                    Path = "/fields/Microsoft.VSTS.Scheduling.CompletedWork",
-                    Value =TotalHours
-                });
-                patch.Add(new JsonPatchOperation
-                {
-                    Operation = Operation.Add,
-                    Path = "/fields/Microsoft.VSTS.Scheduling.RemainingWork",
-                    Value = remainingWork < 0 ? 0 : remainingWork
-                });
-                await azureDevOpsService.UpdateWorkItemAsync(patch, SelectedTask.Id);
-
+                //todo: Sync Calender Item to stop Time
                 _savedTime = _elapsedTime;
                 _lastSaveTime = DateTime.Now;
                 Status = $"Auto-saved {increment.TotalHours:F2} hours to Task #{SelectedTask.Id}";

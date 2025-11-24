@@ -17,6 +17,7 @@ namespace Ma.TimeManagement.Models
     public enum EnStatusAction
     {
         RefreshTasks,
-        Message
+        Message,
+        RefreshItem
     }
 }

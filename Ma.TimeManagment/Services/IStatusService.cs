@@ -7,6 +7,7 @@ namespace Ma.TimeManagement.Services
 {
     public interface IStatusService
     {
+        void RefreshItem(WorkCalendarItem item);
         void RefreshTasks();
         void SendStatus(string status);
         void SendStatus(BalloonIcon Icon,string title, string description);

@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Ma.TimeManagement.Migrations
 {
     /// <inheritdoc />
-    public partial class Init : Migration
+    public partial class init : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -38,8 +38,7 @@ namespace Ma.TimeManagement.Migrations
                 name: "WorkItems",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
+                    Id = table.Column<int>(type: "INTEGER", nullable: false),
                     Title = table.Column<string>(type: "TEXT", nullable: false),
                     State = table.Column<int>(type: "INTEGER", nullable: false),
                     OriginalEstimate = table.Column<double>(type: "REAL", nullable: false),
@@ -66,10 +65,14 @@ namespace Ma.TimeManagement.Migrations
                 name: "WorkCalendarItems",
                 columns: table => new
                 {
-                    Id = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    StartTime = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    DurationHour = table.Column<double>(type: "REAL", nullable: false),
                     Title = table.Column<string>(type: "TEXT", nullable: false),
                     Description = table.Column<string>(type: "TEXT", nullable: false),
-                    WorkItemID = table.Column<int>(type: "INTEGER", nullable: true)
+                    WorkItemID = table.Column<int>(type: "INTEGER", nullable: true),
+                    Synced = table.Column<bool>(type: "INTEGER", nullable: false)
                 },
                 constraints: table =>
                 {

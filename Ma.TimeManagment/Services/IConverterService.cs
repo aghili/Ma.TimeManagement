@@ -8,6 +8,7 @@ namespace Ma.TimeManagement.Services
 {
     public interface IConverterService
     {
+        double ConvertHourToRounded(double hour);
         Models.WorkItem ConvertTo(Microsoft.TeamFoundation.WorkItemTracking.WebApi.Models.WorkItem Item);
         Models.TeamProjectReference ConvertTo(Microsoft.TeamFoundation.Core.WebApi.TeamProjectReference Item);
         IEnumerable<Models.WorkItem> ConvertTo(IEnumerable<Microsoft.TeamFoundation.WorkItemTracking.WebApi.Models.WorkItem> Items);
