@@ -5,6 +5,8 @@ VisualStudioVersion = 17.13.35919.96
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ma.TimeManagement", "Ma.TimeManagment\Ma.TimeManagement.csproj", "{E3AC7123-8B9F-43FC-B15A-C816EEBF03D0}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ma.TimeManagement.Tests", "Ma.TimeManagement.Tests\Ma.TimeManagement.Tests.csproj", "{121D7B78-539E-BF52-4864-CCBBC446607D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -18,6 +20,12 @@ Global
 		{E3AC7123-8B9F-43FC-B15A-C816EEBF03D0}.DebugWithDisableAzure|Any CPU.Build.0 = DebugWithDisableAzure|Any CPU
 		{E3AC7123-8B9F-43FC-B15A-C816EEBF03D0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E3AC7123-8B9F-43FC-B15A-C816EEBF03D0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{121D7B78-539E-BF52-4864-CCBBC446607D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{121D7B78-539E-BF52-4864-CCBBC446607D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{121D7B78-539E-BF52-4864-CCBBC446607D}.DebugWithDisableAzure|Any CPU.ActiveCfg = Debug|Any CPU
+		{121D7B78-539E-BF52-4864-CCBBC446607D}.DebugWithDisableAzure|Any CPU.Build.0 = Debug|Any CPU
+		{121D7B78-539E-BF52-4864-CCBBC446607D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{121D7B78-539E-BF52-4864-CCBBC446607D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
