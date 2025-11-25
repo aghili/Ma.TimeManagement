@@ -413,7 +413,10 @@ namespace Ma.TimeManagement.Services
             {
                 Duration = (item.StartTime - lastDate).TotalHours;
                 if (Duration <= 0)
+                {
+                    lastDate = item.StartTime.AddHours(item.DurationHour);
                     continue;
+                }
                 results.Add(new(){ StartTime =lastDate,DurationHour =converterService.ConvertHourToRounded(Duration) });
                 lastDate = item.StartTime.AddHours(item.DurationHour);
             }
