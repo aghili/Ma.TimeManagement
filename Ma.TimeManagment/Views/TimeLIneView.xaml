@@ -9,8 +9,7 @@
              xmlns:con="clr-namespace:Ma.TimeManagement.Controls"
              mc:Ignorable="d"
              d:DesignHeight="600" d:DesignWidth="1200"
-             x:Name="Root"
-             Background="#1E1E1E">
+             x:Name="Root">
 
     <con:TimeLineControl/>
 </UserControl>

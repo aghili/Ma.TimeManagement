@@ -2,6 +2,7 @@
 using CommunityToolkit.Mvvm.Input;
 using Ma.TimeManagement.Services;
 using Ma.TimeManagement.Views;
+using Microsoft.Extensions.Logging;
 using Microsoft.TeamFoundation.WorkItemTracking.WebApi.Models;
 using Microsoft.VisualStudio.Services.Common;
 using Microsoft.VisualStudio.Services.WebApi.Patch;
@@ -13,8 +14,9 @@ namespace Ma.TimeManagement.ViewModels
 {
     public partial class CreateWorkItemViewModel : ObservableObject
     {
-        public CreateWorkItemViewModel(INavigationService navigationService,IAzureDevOpsService azureDevOpsService,IStatusService statusService)
+        public CreateWorkItemViewModel(ILogger<CreateWorkItemViewModel> logger,INavigationService navigationService,IAzureDevOpsService azureDevOpsService,IStatusService statusService)
         {
+            this.logger = logger;
             this.navigationService = navigationService;
             this.azureDevOpsService = azureDevOpsService;
             this.statusService = statusService;
@@ -34,6 +36,7 @@ namespace Ma.TimeManagement.ViewModels
 
         [ObservableProperty]
         private string _parentId;
+        private readonly ILogger<CreateWorkItemViewModel> logger;
         private readonly INavigationService navigationService;
         private readonly IAzureDevOpsService azureDevOpsService;
         private readonly IStatusService statusService;
@@ -74,6 +77,7 @@ namespace Ma.TimeManagement.ViewModels
             }
             catch (Exception ex)
             {
+                logger.LogError(ex, GetType().Name, []);
                 Application.Current.Dispatcher.Invoke(() => MessageBox.Show($"Error creating: {ex.Message}"));
             }
         }

@@ -18,13 +18,14 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <StackPanel Grid.Row="0" HorizontalAlignment="Left" VerticalAlignment="Center">
             <TextBlock Text="Time Management Assistante" FontSize="24"/>
         </StackPanel>
 
         <!-- Task List -->
-        <ListView  x:Name="TasksListView" Grid.Row="1" ItemsSource="{Binding Source={StaticResource employeeView}}" SelectedItem="{Binding SelectedTask}" MinHeight="250">
+        <ListView  x:Name="TasksListView" Grid.Row="1" ItemsSource="{Binding Source={StaticResource employeeView}}" SelectedItem="{Binding SelectedTask}" MouseDoubleClick="TasksListView_MouseDoubleClick" MinHeight="250">
 
             <ListView.GroupStyle>
                 <GroupStyle>
@@ -65,7 +66,7 @@
                             <ColumnDefinition  Width="auto"/>
                             <ColumnDefinition/>
                         </Grid.ColumnDefinitions>
-                        <ProgressBar Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" Grid.RowSpan="3" Value="{Binding CompletedWork}" Maximum="{Binding TotalWork}"/>
+                        <ProgressBar Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" Width="500" Value="{Binding CompletedWork}" Maximum="{Binding TotalWork}"/>
                         <TextBlock Grid.Row="0" Text="{Binding Id}" Padding="0,0,10,0" />
                         <TextBlock Grid.Row="1" Text="{Binding State}" Padding="0,0,10,0"/>
                         <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal" >
@@ -87,22 +88,31 @@
                 </DataTemplate>
             </ListView.ItemTemplate>
         </ListView>
-        <!-- Task List Controls -->
+        <!-- Task List Controls --><!--
         <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,0,0,5">
             <Button Content="Move Selected to Top and Start" Command="{Binding MoveToTopCommand}" Margin="0,0,10,0"/>
-        </StackPanel>
+        </StackPanel>-->
         
         <!-- Timer Display -->
         <StackPanel Grid.Row="3" Orientation="Horizontal" Margin="0,0,0,10">
-            <Label Content="Current Timer:"/>
-            <TextBlock Text="{Binding TimerText}" FontSize="16" FontWeight="Bold"/>
             <Button Content="Start on Selected Task" Command="{Binding StartCommand}" Margin="10,0,0,0"/>
-            <Button Content="Stop and Save" Command="{Binding StopCommand}" Margin="10,0,0,0" IsEnabled="{Binding IsStopEnabled}"/>
+            <Button Content="Stop and Save" Command="{Binding StopCommand}" Margin="10,0,0,0"/>
+        </StackPanel>
+        <StackPanel Grid.Row="4" Orientation="Horizontal" Margin="0,0,0,10">
+            <TextBlock>
+                <TextBlock.Text>
+                    <MultiBinding StringFormat="{}{0}#: {1} ">
+                        <Binding Path="WorkItemID" />
+                        <Binding Path="WorkItemTitle" />
+                    </MultiBinding>
+                </TextBlock.Text>
+            </TextBlock>
+            <TextBlock Text="{Binding TimerText}" FontSize="16" FontWeight="Bold"/>
         </StackPanel>
 
-       
+
         <!-- Status & Minimize -->
-        <StackPanel Grid.Row="4" Orientation="Horizontal">
+        <StackPanel Grid.Row="5" Orientation="Horizontal">
             <TextBlock Text="{Binding Status}" Foreground="Green"/>
         </StackPanel>
     </Grid>

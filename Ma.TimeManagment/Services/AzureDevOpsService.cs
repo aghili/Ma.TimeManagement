@@ -1,12 +1,9 @@
-﻿using Ma.TimeManagement.Data;
-using Ma.TimeManagement.Models;
-using Ma.TimeManagement.Services.Design;
-using Microsoft.EntityFrameworkCore;
+﻿using Ma.TimeManagement.Models;
+using Microsoft.Extensions.Logging;
 using Microsoft.TeamFoundation.WorkItemTracking.WebApi;
 using Microsoft.VisualStudio.Services.Common;
 using Microsoft.VisualStudio.Services.WebApi.Patch;
 using Microsoft.VisualStudio.Services.WebApi.Patch.Json;
-using System.Threading.Tasks;
 
 namespace Ma.TimeManagement.Services
 {
@@ -18,6 +15,7 @@ namespace Ma.TimeManagement.Services
 
         private List<string> Projects { get; set; }
 
+        private readonly ILogger<IAzureDevOpsService> logger;
         private readonly IStatusService statusService;
         private ISettingsService settingsService;
         private readonly IDataService dataService;
@@ -29,8 +27,9 @@ namespace Ma.TimeManagement.Services
         private IEnumerable<WorkItem> workItems = [];
         private IEnumerable<TeamProjectReference> teamProjects;
 
-        public AzureDevOpsService(IStatusService statusService, ISettingsService settingsService, IDataService dataService, IConverterService converterService)
+        public AzureDevOpsService(ILogger<IAzureDevOpsService> logger,IStatusService statusService, ISettingsService settingsService, IDataService dataService, IConverterService converterService)
         {
+            this.logger = logger;
             this.statusService = statusService;
             this.settingsService = settingsService;
             this.dataService = dataService;
@@ -47,7 +46,12 @@ namespace Ma.TimeManagement.Services
         {
             try
             {
-                CancellationTokenSource cancellationToken = new CancellationTokenSource();
+                if (string.IsNullOrEmpty(Pat))
+                {
+                    statusService.SendStatus(Hardcodet.Wpf.TaskbarNotification.BalloonIcon.Info, "Initialize", "Set Personal Access Token in Settings!");
+                    return;
+                }
+                    CancellationTokenSource cancellationToken = new CancellationTokenSource();
                 cancellationToken.CancelAfter(10000);
                 semaphoreInit.Wait(cancellationToken.Token);
                 var uri = new Uri($"{ServerUrl}/{Collection}");
@@ -62,6 +66,7 @@ namespace Ma.TimeManagement.Services
             }
             catch (Exception ex)
             {
+                logger.LogError(ex, GetType().Name, []);
                 statusService.SendStatus(ex);
             }
             finally
@@ -187,9 +192,18 @@ namespace Ma.TimeManagement.Services
                 await dataService.RemoveAsync(task);
         }
 
+        public async Task AddDiscutionToTaskAsync(string Text,Guid Project,int TaskId)
+        {
+            await WitClient.AddCommentAsync(new Microsoft.TeamFoundation.WorkItemTracking.WebApi.Models.CommentCreate()
+            {
+                Text = ""
+            },Project,TaskId);
+        }
+
         public async Task UpdateWorkItemAsync(JsonPatchDocument patch, int TaskId)
         {
             await WitClient.UpdateWorkItemAsync(patch, TaskId);
+            statusService.SendStatus(Hardcodet.Wpf.TaskbarNotification.BalloonIcon.Info, "Sync", $"{TaskId}#: Update Work Item.");
         }
 
         public async Task<WorkItem> GetWorkItemAsync(int TaskId)
@@ -206,14 +220,14 @@ namespace Ma.TimeManagement.Services
             return await dataService.GetWorkItemAsync(task.Id) ?? task;
         }
 
-        public async Task WorkItemAddWorkCompleteAsync(int workItemID, double durationHour)
+        public async Task WorkItemAddWorkCompleteAsync(int workItemID, double durationHour,string discussionText)
         {
             var currentTask = await GetWorkItemAsync(workItemID);
             var currentCompleted = currentTask.CompletedWork;
             var currentRemainingWork = currentTask.RemainingWork;
-            var TotalHours = Math.Round((currentCompleted + durationHour) * 4, MidpointRounding.ToPositiveInfinity) / 4;
+            var TotalHours = converterService.ConvertHourToRounded(currentCompleted + durationHour);
             var remainingWork = (currentRemainingWork - TotalHours);
-            remainingWork = Math.Round(remainingWork * 4, MidpointRounding.ToPositiveInfinity) / 4;
+            remainingWork = converterService.ConvertHourToRounded(remainingWork);
 
 
             var patch = new JsonPatchDocument();
@@ -229,6 +243,13 @@ namespace Ma.TimeManagement.Services
                 Path = "/fields/Microsoft.VSTS.Scheduling.RemainingWork",
                 Value = remainingWork < 0 ? 0 : remainingWork
             });
+            patch.Add(new JsonPatchOperation
+            {
+                Operation = Operation.Add,
+                Path = "/fields/System.History",
+                Value = discussionText
+            });
+            statusService.SendStatus(Hardcodet.Wpf.TaskbarNotification.BalloonIcon.Info, "Sync", $"{workItemID}#: Update CompletedWork to {TotalHours} and RemainingWork to {remainingWork}.");
             await UpdateWorkItemAsync(patch, workItemID);
         }
     }

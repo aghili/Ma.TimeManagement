@@ -36,5 +36,7 @@ namespace Ma.TimeManagement.Services
         void SetWorkCalendarItemDurationHour(int ID, double durationHour);
         IEnumerable<WorkCalendarItem> GetWorkCalendarFreeItemsDaily();
         Task<IEnumerable<WorkCalendarItem>> GetWorkCalendarFreeItemsDailyAsync();
+        WorkCalendarItem? GetWorkCalendarItemWithWorkItem(int id);
+        Task<WorkCalendarItem?> GetWorkCalendarItemWithWorkItemAsync(int id);
     }
 }

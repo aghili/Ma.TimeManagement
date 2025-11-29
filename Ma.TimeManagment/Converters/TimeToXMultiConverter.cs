@@ -10,7 +10,7 @@ namespace Ma.TimeManagement.Converters
             if (values.Length < 2 || values[0] is not DateTime time || values[1] is not double zoom)
                 return 0.0;
 
-            var dayStart = DateTime.Today.AddHours(8);
+            var dayStart = DateTime.Today;
             var minutesFromStart = (time - dayStart).TotalMinutes;
             return minutesFromStart * (zoom / 60.0);
         }

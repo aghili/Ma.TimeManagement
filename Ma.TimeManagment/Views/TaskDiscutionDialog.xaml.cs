@@ -4,14 +4,14 @@ using System.Windows;
 
 namespace Ma.TimeManagement.Views
 {
-    public partial class TaskSelectionDialog : Window
+    public partial class TaskDiscussionDialog : Window
     {
-        public TaskSelectionDialog()
+        public TaskDiscussionDialog()
         {
             InitializeComponent();
         }
 
-        private void OnStart(object sender, RoutedEventArgs e)
+        private void OnAccept(object sender, RoutedEventArgs e)
         {
             DialogResult = true;
             Close();

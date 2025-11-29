@@ -1,9 +1,11 @@
-﻿using CommunityToolkit.Mvvm.Messaging;
+﻿using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 using Hardcodet.Wpf.TaskbarNotification;
 using Ma.TimeManagement.Models;
 using Ma.TimeManagement.ViewModels;
 using Ma.TimeManagement.Windows;
 using System.Drawing;
+using System.IO;
 using System.Windows;
 
 namespace Ma.TimeManagement.Services
@@ -17,8 +19,9 @@ namespace Ma.TimeManagement.Services
             // Create tray icon
             _notifyIcon = new TaskbarIcon
             {
-                Icon = SystemIcons.Application, // Add an icon file to project (or use SystemIcons.Application)
+                Icon = new Icon(new MemoryStream(Properties.Resources.Icon)), // Add an icon file to project (or use SystemIcons.Application)
                 ToolTipText = "Ma.TimeManagement - Time Tracking",
+                
                 Visibility = Visibility.Visible
             };
 
@@ -31,12 +34,18 @@ namespace Ma.TimeManagement.Services
             contextMenu.Items.Add(showMenuItem);
             contextMenu.Items.Add(exitMenuItem);
             _notifyIcon.ContextMenu = contextMenu;
+            _notifyIcon.DoubleClickCommand = new RelayCommand(() => { App.Current.MainWindow.ShowAndActivate(); });
 
             // Double-click tray to show window
             _notifyIcon.TrayMouseDoubleClick += (s, args) => App.Current.MainWindow.ShowAndActivate();
 
-
         }
+
+        private void Current_Exit(object sender, ExitEventArgs e)
+        {
+            _notifyIcon?.Dispose();
+        }
+
         public void SendStatus(BalloonIcon icon,string title, string description)
         {
             StatusModel message = new(icon,title, description);
@@ -72,6 +81,11 @@ namespace Ma.TimeManagement.Services
         public void SendStatus(string status)
         {
             SendStatus(BalloonIcon.Info, "Info", status);
+        }
+
+        public void Stop()
+        {
+            _notifyIcon?.Dispose();
         }
     }
 }

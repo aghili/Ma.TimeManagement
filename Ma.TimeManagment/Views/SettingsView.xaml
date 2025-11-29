@@ -32,7 +32,7 @@
         <Label Grid.Row="2" Grid.Column="0" VerticalAlignment="Center" Content="Server:" />
         <TextBox Grid.Row="2" Grid.Column="2" VerticalAlignment="Center" IsReadOnly="True" Text="{Binding ServerUrl}"/>
         <Label Grid.Row="4" Grid.Column="0" VerticalAlignment="Center" Content="Collection:"/>
-        <TextBox Grid.Row="4" Grid.Column="2" VerticalAlignment="Center" IsReadOnly="True"  Text="{Binding Collection}"/>
+        <TextBox Grid.Row="4" Grid.Column="2" VerticalAlignment="Center" IsReadOnly="False"  Text="{Binding Collection}"/>
         <Label Grid.Row="6" Grid.Column="0" VerticalAlignment="Center" Content="PAT:"/>
         <PasswordBox Grid.Row="6" Grid.Column="2" VerticalAlignment="Center" x:Name="PatBox" PasswordChanged="PatBox_PasswordChanged"/>
         <Button Grid.Row="6" Grid.Column="4" VerticalAlignment="Center" Content="Connect" Command="{Binding ConnectCommand}"/>

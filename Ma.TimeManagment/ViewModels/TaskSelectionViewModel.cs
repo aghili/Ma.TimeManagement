@@ -29,5 +29,7 @@ namespace Ma.TimeManagement.ViewModels
         }
         [ObservableProperty]
         private double _duration = 0;
+        [ObservableProperty]
+        private DateTime _timeStart = DateTime.Today.AddHours(8);
     }
 }

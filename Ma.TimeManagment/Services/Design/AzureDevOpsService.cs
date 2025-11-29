@@ -139,19 +139,14 @@ namespace Ma.TimeManagement.Services.Design
             return await dataService.GetWorkItemAsync(TaskId);
         }
 
-        internal async Task<WorkItem> CreateWorkItemAsync(JsonPatchDocument patch, Guid ProjectID, string type)
+        public async Task<WorkItem> CreateWorkItemAsync(JsonPatchDocument patch, Guid guid, string type)
         {
-            return null;
+            return new();
         }
 
-        Task<WorkItem> IAzureDevOpsService.CreateWorkItemAsync(JsonPatchDocument patch, Guid guid, string type)
+        public Task WorkItemAddWorkCompleteAsync(int workItemID, double durationHour, string discussionText)
         {
-            return CreateWorkItemAsync(patch, guid, type);
-        }
-
-        public Task WorkItemAddWorkCompleteAsync(int workItemID, double durationHour)
-        {
-            throw new NotImplementedException();
+            return Task.CompletedTask;
         }
     }
 }

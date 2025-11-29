@@ -23,5 +23,14 @@ namespace Ma.TimeManagement.Windows
         {
             InitializeComponent();
         }
+
+        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            // Prevent the window from actually closing (and stopping the app)
+            e.Cancel = true;
+
+            // Hide the window instead
+            this.Hide();
+        }
     }
 }

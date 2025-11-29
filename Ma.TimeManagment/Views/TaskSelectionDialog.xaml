@@ -54,6 +54,8 @@
             </ListView.ItemTemplate>
         </ListView>
         <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Left">
+            <TextBlock  Text="Start :"/>
+            <TextBox x:Name="txt_StartTime" ToolTip="Time of start" Text="{Binding StartTime,StringFormat={}{0:HH:mm}}"/>
             <TextBlock  Text="Duration :"/>
             <TextBox x:Name="txt_duration" ToolTip="Hour" Text="{Binding Duration,StringFormat={}{0:2}h}"/>
         </StackPanel>

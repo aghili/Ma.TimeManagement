@@ -15,5 +15,10 @@ namespace Ma.TimeManagement.Views
         {
             (DataContext as HomeViewModel).RefreshTasksCommand.Execute(null);
         }
+
+        private void TasksListView_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            (DataContext as HomeViewModel).ShowTaskCommand.Execute(null);
+        }
     }
 }

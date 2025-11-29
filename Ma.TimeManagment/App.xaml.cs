@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.IO;
 using System.Reflection;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Forms;
 using System.Windows.Threading;
@@ -14,10 +15,12 @@ using Ma.TimeManagement.Views;
 using Ma.TimeManagement.Windows;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Internal;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 //using Wpf.Ui.Appearance;
 
 namespace Ma.TimeManagement
@@ -32,51 +35,38 @@ namespace Ma.TimeManagement
 
         private static IHost _host;
 
-        /// <summary>
-        /// Gets registered service.
-        /// </summary>
-        /// <typeparam name="T">Type of the service to get.</typeparam>
-        /// <returns>Instance of the service or <see langword="null"/>.</returns>
-        public static T GetService<T>()
-            where T : class
-        {
-            return _host.Services.GetService(typeof(T)) as T;
-        }
-
-        /// <summary>
-        /// Occurs when the application is loading.
-        /// </summary>
-        private void OnStartup(object sender, StartupEventArgs e)
+        public App()
         {
             var staticDataInstance = new StaticDataService();
             _host = Host
-            .CreateDefaultBuilder(e.Args)
+            .CreateDefaultBuilder()
             .ConfigureAppConfiguration(c => { c.SetBasePath(staticDataInstance.PathConfiguration); })
             .ConfigureServices((context, services) =>
             {
-                var connectionString = context.Configuration.GetConnectionString("DefaultConnection") ?? new SqliteConnectionStringBuilder() { DataSource = staticDataInstance.PathFullDatabase,Cache = SqliteCacheMode.Shared,Pooling = true }.ConnectionString;
+                var connectionString = context.Configuration.GetConnectionString("DefaultConnection") ?? new SqliteConnectionStringBuilder() { DataSource = staticDataInstance.PathFullDatabase, Cache = SqliteCacheMode.Shared, Pooling = true }.ConnectionString;
                 context.Configuration["DefaultConnection"] = connectionString;
 
                 services.AddSingleton<IStaticDataService>(staticDataInstance);
                 services.AddDbContextFactory<ApplicationDbContext>(options => options.UseSqlite(connectionString));
                 services.AddTransient<IDataService, DataService>();
+                services.AddTransient<ITimeManagementService, TimeManagementService>();
 
                 services.AddSingleton<INavigationService, NavigationService>();
                 services.AddSingleton<INavigationStore, NavigationStore>();
 #if DEBUGWITHDISABLEAZURE
                 services.AddSingleton<IAzureDevOpsService, Services.Design.AzureDevOpsService>();
 #else
-                services.AddSingleton<IAzureDevOpsService,Services.AzureDevOpsService>();
+                services.AddSingleton<IAzureDevOpsService, Services.AzureDevOpsService>();
 
 #endif                
-                services.AddSingleton<ISettingsService,SettingsService>();
+                services.AddSingleton<ISettingsService, SettingsService>();
 
                 services.AddSingleton<MainViewModel>();
                 services.AddSingleton<HomeViewModel>();
                 services.AddTransient<SettingsViewModel>();
                 services.AddSingleton<TimelineViewModel>();
 
-                services.AddTransient<IDialogService,DialogService>();
+                services.AddTransient<IDialogService, DialogService>();
                 //services.AddHostedService<ApplicationHostService>();
 
                 //services.AddSingleton<IConverterService, ConverterService>();
@@ -101,16 +91,38 @@ namespace Ma.TimeManagement
                 services.AddHostedService<TimeEngineService>();
 
             }).Build();
-            SetupExceptionHandling();
-            _host.StartAsync().Wait();
             using (var scope = _host.Services.CreateScope())
             {
                 var services = scope.ServiceProvider;
 
-                var context = services.GetRequiredService<ApplicationDbContext>();
-                context.Database.EnsureCreated();
-                // DbInitializer.Initialize(context);
+                var dbContextFactory = services.GetRequiredService<IDbContextFactory<ApplicationDbContext>>();
+
+                using var applicationDbContext = dbContextFactory.CreateDbContext();
+
+                applicationDbContext.Database.Migrate();
             }
+
+            SetupExceptionHandling();
+        }
+
+        /// <summary>
+        /// Gets registered service.
+        /// </summary>
+        /// <typeparam name="T">Type of the service to get.</typeparam>
+        /// <returns>Instance of the service or <see langword="null"/>.</returns>
+        public static T GetService<T>()
+            where T : class
+        {
+            return _host.Services.GetService(typeof(T)) as T;
+        }
+
+        /// <summary>
+        /// Occurs when the application is loading.
+        /// </summary>
+        protected override async void OnStartup(StartupEventArgs e)
+        {
+            base.OnStartup(e);
+            await _host.StartAsync();
             var mainWindow = _host.Services.GetRequiredService<MainWindow>();
             mainWindow.Show();
          
@@ -120,9 +132,16 @@ namespace Ma.TimeManagement
         /// <summary>
         /// Occurs when the application is closing.
         /// </summary>
-        private void OnExit(object sender, ExitEventArgs e)
+        protected override async void OnExit(ExitEventArgs e)
         {
-            _host.StopAsync().Wait();
+            var statusService = GetService<IStatusService>();
+            statusService.Stop();
+            base.OnExit(e);
+
+            // Signal the host to stop when the WPF application exits
+            await _host.StopAsync();
+
+            // Dispose of the host
             _host.Dispose();
         }
 
@@ -160,6 +179,7 @@ namespace Ma.TimeManagement
         private void LogUnhandledException(Exception exception, string source)
         {
             var status_service = GetService<IStatusService>();
+            var logger = GetService<ILogger>();
             string message = $"Unhandled exception ({source})";
             try
             {
@@ -168,17 +188,13 @@ namespace Ma.TimeManagement
             }
             catch (Exception ex)
             {
+                logger.LogError(ex, GetType().Name, []);
                 status_service.SendStatus(ex);
             }
             finally
             {
                 status_service.SendStatus(BalloonIcon.Error,"Error", $"{message}\n{exception.Message}");
             }
-        }
-
-        private void Application_Startup(object sender, StartupEventArgs e)
-        {
-
         }
     }
 

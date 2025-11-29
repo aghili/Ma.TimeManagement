@@ -10,8 +10,7 @@
              mc:Ignorable="d"
              d:DataContext="{d:DesignInstance Type=vmd:TimeLineViewModel, IsDesignTimeCreatable=True}"
              d:DesignHeight="600" d:DesignWidth="1200"
-             x:Name="Root"
-             Background="#1E1E1E">
+             x:Name="Root">
 
     <UserControl.Resources>
         <conv:DurationToWidthConverter x:Key="DurationToWidth"/>
@@ -32,6 +31,7 @@
 
             <Button Grid.Column="0" Content="START" Command="{Binding StartTaskCommand}"/>
             <Button Grid.Column="1" Content="INSERT" Command="{Binding InsertTaskCommand}"/>
+            <Button Grid.Column="1" Content="STOP" Command="{Binding EndTaskCommand}"/>
 
         </StackPanel>
         <Grid  Grid.Row="1">
@@ -42,9 +42,9 @@
 
                 <StackPanel HorizontalAlignment="Left">
                     <!-- Time Ruler (08:00 – 22:00) -->
-                    <Border Height="60" Background="#252526" BorderBrush="#444" BorderThickness="0,0,0,1">
+                    <Border Height="60" Background="#10252526" BorderBrush="#444" BorderThickness="0,0,0,1">
                         <Canvas Width="{Binding DataContext.TimelineWidth, ElementName=Root}">
-                            <ItemsControl ItemsSource="{Binding Source=8, Converter={StaticResource HourRange}}">
+                            <ItemsControl ItemsSource="{Binding Source=0, Converter={StaticResource HourRange}}">
                                 <ItemsControl.ItemsPanel>
                                     <ItemsPanelTemplate>
                                         <Canvas/>
@@ -72,7 +72,7 @@
 
                                             <!-- Hour Label -->
                                             <TextBlock Text="{Binding StringFormat=HH:mm}"
-                                               Foreground="#CCCCCC" FontSize="13" FontWeight="Medium"
+                                               FontSize="13" FontWeight="Medium"
                                                Margin="6,32,0,0">
                                                 <TextBlock.RenderTransform>
                                                     <TranslateTransform>
@@ -132,38 +132,32 @@
                                         </Button.RenderTransform>
 
                                         <Grid>
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="Auto"/>
-                                                <ColumnDefinition Width="*"/>
-                                                <ColumnDefinition Width="*"/>
-                                            </Grid.ColumnDefinitions>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition/>
+                                                <RowDefinition/>
+                                            </Grid.RowDefinitions>
                                             <TextBlock Text="{Binding Title}"
-                                                   Foreground="White"
                                                    FontWeight="SemiBold"
                                                    FontSize="14"
                                                    VerticalAlignment="Center"/>
-                                            <TextBlock Grid.Column="1"
+                                            <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Left">
+                                                <TextBlock
                                                    Text="{Binding StartTime}"
-                                                   Foreground="#AAAAAA"
                                                    FontSize="11"
                                                    HorizontalAlignment="Right"
                                                    Margin="0,0,12,0"
                                                    VerticalAlignment="Center"/>
-                                            <TextBlock Grid.Column="2"
+                                            <TextBlock
            Text=" - "
-           Foreground="#AAAAAA"
            FontSize="11"
-           HorizontalAlignment="Right"
            Margin="0,0,12,0"
            VerticalAlignment="Center"/>
-                                            <TextBlock Grid.Column="3"
+                                            <TextBlock
            Text="{Binding EndTime}"
-           Foreground="#AAAAAA"
            FontSize="11"
-           HorizontalAlignment="Right"
            Margin="0,0,12,0"
            VerticalAlignment="Center"/>
-
+                                            </StackPanel>
                                         </Grid>
                                     </Button>
                                 </DataTemplate>
@@ -180,7 +174,7 @@
                     HorizontalAlignment="Right"
                     VerticalAlignment="Bottom"
                     Margin="24"
-                    Background="#CC000000">
+                    Background="#20000000">
                 <Button Content="−" Width="48" Height="48" Margin="4" FontSize="24" FontWeight="Bold"
                     Command="{Binding ZoomOutCommand}"/>
                 <Button Content="Reset" Width="90" Height="48" Margin="4" FontWeight="Medium"

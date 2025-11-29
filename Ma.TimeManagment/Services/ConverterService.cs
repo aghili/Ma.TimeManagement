@@ -1,4 +1,5 @@
 ﻿using Ma.TimeManagement.Models;
+using System.Windows.Media;
 
 namespace Ma.TimeManagement.Services
 {
@@ -13,18 +14,32 @@ namespace Ma.TimeManagement.Services
 
         public WorkItem ConvertTo(Microsoft.TeamFoundation.WorkItemTracking.WebApi.Models.WorkItem Item)
         {
+            bool isValid = Validate(Item,out List<string> fields);
+            object? value;
             return new()
             {
-                Id = Item.Id??0,
-                ProjectName = Convert.ToString(Item.Fields["System.TeamProject"]) ?? "",
+                Id = Item.Id ?? 0,
+                ProjectName =  Convert.ToString(Item.Fields["System.TeamProject"]) ?? "",
                 Url = Item.Url,
-                Title = Convert.ToString(Item.Fields["System.Title"]) ?? "",
-                State = Enum.Parse<EnWorkState>(Convert.ToString(Item.Fields["System.State"])?? "",true),
+                Title = (isValid ? "" : $"[FIELD MISSING({string.Join(",",fields)})]") + Convert.ToString(Item.Fields["System.Title"]) ?? "",
+                State = Enum.Parse<EnWorkState>(Convert.ToString(Item.Fields["System.State"]) ?? "", true),
                 WorkItemType = Enum.Parse<EnWorkItemType>(Convert.ToString(Item.Fields["System.WorkItemType"]) ?? ""),
-                OriginalEstimate = Convert.ToDouble(Item.Fields["Microsoft.VSTS.Scheduling.OriginalEstimate"] ?? "0.0"),
-                RemainingWork = Convert.ToDouble(Item.Fields["Microsoft.VSTS.Scheduling.RemainingWork"] ?? "0.0"),
-                CompletedWork = Convert.ToDouble(Item.Fields["Microsoft.VSTS.Scheduling.CompletedWork"] ?? "0.0")
+                OriginalEstimate = Item.Fields.TryGetValue("Microsoft.VSTS.Scheduling.OriginalEstimate", out value) ?Convert.ToDouble(value ?? "0.0"):0,
+                RemainingWork = Item.Fields.TryGetValue("Microsoft.VSTS.Scheduling.RemainingWork", out value) ? Convert.ToDouble(value ?? "0.0"):0,
+                CompletedWork = Item.Fields.TryGetValue("Microsoft.VSTS.Scheduling.CompletedWork", out value) ? Convert.ToDouble(value ?? "0.0"):0
             };
+        }
+
+        private bool Validate(Microsoft.TeamFoundation.WorkItemTracking.WebApi.Models.WorkItem item, out List<string> fields)
+        {
+            fields = [];
+            if (!item.Fields.ContainsKey("Microsoft.VSTS.Scheduling.OriginalEstimate"))
+                fields.Add("OriginalEstimate");
+            if (!item.Fields.ContainsKey("Microsoft.VSTS.Scheduling.RemainingWork"))
+                fields.Add("RemainingWork");
+            if (!item.Fields.ContainsKey("Microsoft.VSTS.Scheduling.CompletedWork"))
+                     fields.Add("CompletedWork");
+            return fields.Count == 0;
         }
 
         public Models.TeamProjectReference ConvertTo(Microsoft.TeamFoundation.Core.WebApi.TeamProjectReference Item)

@@ -9,7 +9,7 @@ namespace Ma.TimeManagement.Models
         public string ServerUrl { set; get; } = "https://cicd-server";
 
         [DataMember]
-        public string Collection { set; get; } = "DefaultCollection";
+        public string Collection { set; get; } = "MahakSolutions";
 
         [DataMember]
         public string Project { set; get; }

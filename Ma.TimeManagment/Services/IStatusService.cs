@@ -12,5 +12,6 @@ namespace Ma.TimeManagement.Services
         void SendStatus(string status);
         void SendStatus(BalloonIcon Icon,string title, string description);
         void SendStatus(Exception ex);
+        void Stop();
     }
 }

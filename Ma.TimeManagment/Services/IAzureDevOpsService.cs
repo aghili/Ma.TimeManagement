@@ -7,12 +7,12 @@ namespace Ma.TimeManagement.Services
     {
         IEnumerable<WorkItem> WorkItems { get; }
 
-        Task<WorkItem> CreateWorkItemAsync(JsonPatchDocument patch, Guid guid, string type);
+        Task<WorkItem> CreateWorkItemAsync(JsonPatchDocument patch, Guid guid, string discution);
         Task<IEnumerable<TeamProjectReference>> GetProjects();
         Task<IEnumerable<WorkItem>> GetTasks();
         Task<WorkItem> GetWorkItemAsync(int TaskId);
         void Initialize(string ServerUrl, string Collection, string project, string Pat);
         Task UpdateWorkItemAsync(JsonPatchDocument patch, int TaskId);
-        Task WorkItemAddWorkCompleteAsync(int workItemID, double durationHour);
+        Task WorkItemAddWorkCompleteAsync(int workItemID, double durationHour, string discussionText);
     }
 }

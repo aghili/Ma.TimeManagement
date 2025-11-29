@@ -5,6 +5,7 @@ using CommunityToolkit.Mvvm.Messaging;
 using Ma.TimeManagement.Models;
 using Ma.TimeManagement.Services;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using System.Windows;
 
 namespace Ma.TimeManagement.ViewModels
@@ -16,11 +17,13 @@ namespace Ma.TimeManagement.ViewModels
         private ObservableObject currentViewModel;
         [ObservableProperty]
         private string message;
+        private readonly ILogger<MainViewModel> logger;
         private readonly INavigationStore _navigationStore;
         private readonly INavigationService _navigationService;
 
-        public MainViewModel(INavigationStore navigationStore, INavigationService navigationService)
+        public MainViewModel(ILogger<MainViewModel> logger,INavigationStore navigationStore, INavigationService navigationService)
         {
+            this.logger = logger;
             _navigationStore = navigationStore;
             _navigationService = navigationService;
 
@@ -63,6 +66,7 @@ namespace Ma.TimeManagement.ViewModels
             }
             catch (Exception ex)
             {
+                logger.LogError(ex, GetType().Name, []);
                 Console.WriteLine(ex);
             }
         }
@@ -75,6 +79,7 @@ namespace Ma.TimeManagement.ViewModels
             }
             catch (Exception ex)
             {
+                logger.LogError(ex, GetType().Name, []);
                 Console.WriteLine(ex);
             }
         }

@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using Ma.TimeManagement.Models;
 using Ma.TimeManagement.Services;
+using Microsoft.Extensions.Logging;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using System.Windows;
@@ -13,8 +14,8 @@ namespace Ma.TimeManagement.ViewModels
 {
     public partial class TimelineViewModel :ObservableObject,ITimeLineViewModel
     {
-        public const int StartHour = 8;
-        public const int EndHour = 22;
+        public const int StartHour = 00;
+        public const int EndHour = 23;
         public const int TotalHours = EndHour - StartHour;
         public const int TotalMinutes = TotalHours * 60;
 
@@ -36,8 +37,10 @@ namespace Ma.TimeManagement.ViewModels
 
        
 
-        public TimelineViewModel(IAzureDevOpsService azureDevOpsService,IDataService dataService, IDialogService dialogService,IStatusService statusService)
+        public TimelineViewModel(ILogger<ITimeLineViewModel> logger,ITimeManagementService timeManagementService,IAzureDevOpsService azureDevOpsService,IDataService dataService, IDialogService dialogService,IStatusService statusService)
         {
+            this.logger = logger;
+            this.timeManagementService = timeManagementService;
             _azureDevOpsService = azureDevOpsService ?? throw new ArgumentNullException(nameof(azureDevOpsService));
             this.dataService = dataService;
             _dialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
@@ -45,6 +48,7 @@ namespace Ma.TimeManagement.ViewModels
             
             StartTaskCommand = new RelayCommand(async () => await ExecuteStartTaskAsync());
             InsertTaskCommand = new RelayCommand(async () => await InsertStartTaskAsync());
+            EndTaskCommand = new RelayCommand(async () => await ExecuteEndTaskAsync());
 
             _items.CollectionChanged += (_, __) => OnPropertyChanged(nameof(HasItems));
             
@@ -80,6 +84,7 @@ namespace Ma.TimeManagement.ViewModels
                 }
                 catch (Exception ex)
                 {
+                    logger.LogError(ex, GetType().Name, []);
                     statusService.SendStatus(ex);
                 }
             });
@@ -89,8 +94,11 @@ namespace Ma.TimeManagement.ViewModels
         public IRelayCommand ZoomOutCommand { get; }
         public IRelayCommand ResetCommand { get; }
         public IRelayCommand StartTaskCommand { get; }
+        public IRelayCommand EndTaskCommand { get; }
         public IRelayCommand InsertTaskCommand { get; }
 
+        private readonly ILogger<ITimeLineViewModel> logger;
+        private readonly ITimeManagementService timeManagementService;
         private readonly IAzureDevOpsService _azureDevOpsService;
         private readonly IDataService dataService;
         private readonly IDialogService _dialogService;
@@ -100,6 +108,11 @@ namespace Ma.TimeManagement.ViewModels
 
 
         public event EventHandler<WorkItem> TaskStarted;
+
+        private async Task ExecuteEndTaskAsync()
+        {
+            await timeManagementService.EndActiveTaskAsync();
+        }
 
         private async Task ExecuteStartTaskAsync()
         {
@@ -134,8 +147,7 @@ namespace Ma.TimeManagement.ViewModels
             var result = _dialogService.ShowDialog(vm);
             if (result == true && vm.SelectedTask != null)
             {
-                await AddTaskToTimelineAsync(vm.SelectedTask);
-                TaskStarted?.Invoke(this, vm.SelectedTask);
+                await timeManagementService.StartNewTaskAsync(vm.SelectedTask);
             }
         }
 
@@ -175,26 +187,22 @@ namespace Ma.TimeManagement.ViewModels
             var result = _dialogService.ShowDialog(vm);
             if (result == true && vm.SelectedTask != null && vm.SelectedWorkCalendarItem != null)
             {
-                vm.SelectedWorkCalendarItem.Synced = true;
-                vm.SelectedWorkCalendarItem.DurationHour = vm.Duration;
-                var item = await dataService.AddOrUpdateAsync(vm.SelectedTask.Id, vm.SelectedWorkCalendarItem);
-                await AddTaskToTimelineAsync(item);
-                TaskStarted?.Invoke(this, vm.SelectedTask);
+                await timeManagementService.InsertNewTaskAsync(vm.SelectedTask,vm.SelectedWorkCalendarItem.StartTime,vm.Duration);
             }
         }
 
-        public async Task AddTaskToTimelineAsync(WorkItem task)
-        {
-            WorkCalendarItem item = new()
-            {
-                Title = task.Title,
-                StartTime = DateTime.Now,
-                DurationHour = .25
-            };
-            await dataService.AddOrUpdateAsync(task.Id,item);
+        //public async Task AddTaskToTimelineAsync(WorkItem task)
+        //{
+        //    WorkCalendarItem item = new()
+        //    {
+        //        Title = task.Title,
+        //        StartTime = DateTime.Now,
+        //        DurationHour = .25
+        //    };
+        //    await dataService.AddOrUpdateAsync(task.Id,item);
             
-            await AddTaskToTimelineAsync(item);
-        }
+        //    await AddTaskToTimelineAsync(item);
+        //}
 
         public async Task AddTasksToTimeline(IEnumerable<WorkCalendarItem> tasks)
         {

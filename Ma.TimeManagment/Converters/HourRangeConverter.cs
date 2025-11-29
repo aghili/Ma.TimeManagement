@@ -13,7 +13,7 @@ public class HourRangeConverter : IValueConverter
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
     {
         // Returns 08:00, 09:00, ..., 22:00
-        return Enumerable.Range(8, 15).Select(h => DateTime.Today.AddHours(h));
+        return Enumerable.Range(0, 24).Select(h => DateTime.Today.AddHours(h));
     }
 
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)

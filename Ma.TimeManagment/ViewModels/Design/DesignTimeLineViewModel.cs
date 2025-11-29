@@ -13,8 +13,8 @@ namespace Ma.TimeManagement.ViewModels.Design
 {
     internal class TimeLineViewModel :ObservableObject, ITimeLineViewModel
     {
-        public const int StartHour = 8;
-        public const int EndHour = 22;
+        public const int StartHour = 0;
+        public const int EndHour = 24;
         public const int TotalHours = EndHour - StartHour;
         public const int TotalMinutes = TotalHours * 60;
         public DateTime DayStart => DateTime.Today.AddHours(StartHour);

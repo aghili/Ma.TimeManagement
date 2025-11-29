@@ -2,17 +2,20 @@
 using Ma.TimeManagement.Models;
 using Microsoft.CodeAnalysis;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace Ma.TimeManagement.Services
 {
     public class DataService : IDataService
     {
+        private readonly ILogger<IDataService> logger;
         private readonly IDbContextFactory<ApplicationDbContext> dbContextFactory;
         private readonly IConverterService converterService;
         private readonly IStatusService statusService;
 
-        public DataService(IDbContextFactory<ApplicationDbContext> dbContextFactory,IConverterService converterService, IStatusService statusService)
+        public DataService(ILogger<IDataService> logger,IDbContextFactory<ApplicationDbContext> dbContextFactory,IConverterService converterService, IStatusService statusService)
         {
+            this.logger = logger;
             this.dbContextFactory = dbContextFactory;
             this.converterService = converterService;
             this.statusService = statusService;
@@ -56,8 +59,14 @@ namespace Ma.TimeManagement.Services
             {
                 await applicationDbContext.SaveChangesAsync();
             }
+            catch (DbUpdateException ex)
+            {
+                applicationDbContext.Entry(item).State = EntityState.Modified;
+                await applicationDbContext.SaveChangesAsync();
+            }
             catch (Exception ex)
             {
+                logger.LogError(ex, GetType().Name, []);
                 statusService.SendStatus(ex);
             }
             return item;
@@ -76,8 +85,14 @@ namespace Ma.TimeManagement.Services
             {
                 applicationDbContext.SaveChanges();
             }
+            catch (DbUpdateException ex)
+            {
+                applicationDbContext.Entry(item).State = EntityState.Modified;
+                applicationDbContext.SaveChanges();
+            }
             catch (Exception ex)
             {
+                logger.LogError(ex, GetType().Name, []);
                 statusService.SendStatus(ex);
             }
             return item;
@@ -120,8 +135,14 @@ namespace Ma.TimeManagement.Services
             {
                 await applicationDbContext.SaveChangesAsync();
             }
+            catch(DbUpdateException ex)
+            {
+                applicationDbContext.Entry(item).State = EntityState.Modified;
+                await applicationDbContext.SaveChangesAsync();
+            }
             catch (Exception ex)
             {
+                logger.LogError(ex, GetType().Name, []);
                 statusService.SendStatus(ex);
             }
             return item;
@@ -148,8 +169,14 @@ namespace Ma.TimeManagement.Services
             {
                 applicationDbContext.SaveChanges();
             }
+            catch (DbUpdateException ex)
+            {
+                applicationDbContext.Entry(item).State = EntityState.Modified;
+                applicationDbContext.SaveChanges();
+            }
             catch (Exception ex)
             {
+                logger.LogError(ex, GetType().Name, []);
                 statusService.SendStatus(ex);
             }
             return item;
@@ -246,8 +273,14 @@ namespace Ma.TimeManagement.Services
             {
                 await applicationDbContext.SaveChangesAsync();
             }
+            catch (DbUpdateException ex)
+            {
+                applicationDbContext.Entry(item).State = EntityState.Modified;
+                await applicationDbContext.SaveChangesAsync();
+            }
             catch (Exception ex)
             {
+                logger.LogError(ex, GetType().Name, []);
                 statusService.SendStatus(ex);
             }
             return item;
@@ -275,8 +308,14 @@ namespace Ma.TimeManagement.Services
             {
                 applicationDbContext.SaveChanges();
             }
+            catch (DbUpdateException ex)
+            {
+                applicationDbContext.Entry(item).State = EntityState.Modified;
+                applicationDbContext.SaveChanges();
+            }
             catch (Exception ex)
             {
+                logger.LogError(ex, GetType().Name, []);
                 statusService.SendStatus(ex);
             }
             return item;
@@ -287,14 +326,13 @@ namespace Ma.TimeManagement.Services
             entity.DurationHour = item.DurationHour;
             entity.WorkItemID = item.WorkItemID;
             entity.StartTime = item.StartTime;
-            entity.Title = item.Title;
             entity.Description = item.Description;
+            entity.Synced = item.Synced;
         }
 
         private void PerpareItem(WorkCalendarItem item)
         {
             item.Description = item.Description ?? "";
-            item.Title = item.Title ?? "";
         }
 
         public async Task<WorkCalendarItem?> GetWorkCalendarItemAsync(int Id)
@@ -394,7 +432,30 @@ namespace Ma.TimeManagement.Services
 
         public IEnumerable<WorkCalendarItem> GetWorkCalendarFreeItemsDaily()
         {
-            throw new NotImplementedException();
+            using var applicationDbContext = dbContextFactory.CreateDbContext();
+            var Tasks = applicationDbContext.WorkCalendarItems
+                .Where(i => i.StartTime >= DateTime.Today && i.StartTime < DateTime.Now.AddDays(1).Date)
+                .OrderBy(i => i.StartTime)
+                .ToList();
+            if (Tasks.Count == 0)
+                return [new() { StartTime = DateTime.Today.AddHours(8) }];
+            List<WorkCalendarItem> results = [];
+            DateTime lastDate = DateTime.Today.AddHours(8);
+            double Duration = 0;
+            foreach (var item in Tasks)
+            {
+                Duration = (item.StartTime - lastDate).TotalHours;
+                if (Duration <= 0)
+                {
+                    lastDate = item.StartTime.AddHours(item.DurationHour);
+                    continue;
+                }
+                results.Add(new() { StartTime = lastDate, DurationHour = converterService.ConvertHourToRounded(Duration) });
+                lastDate = item.StartTime.AddHours(item.DurationHour);
+            }
+            Duration = (DateTime.Today.AddHours(22) - lastDate).TotalHours;
+            results.Add(new() { StartTime = lastDate, DurationHour = converterService.ConvertHourToRounded(Duration) });
+            return results;
         }
 
         public async Task<IEnumerable<WorkCalendarItem>> GetWorkCalendarFreeItemsDailyAsync()
@@ -423,6 +484,26 @@ namespace Ma.TimeManagement.Services
             Duration = (DateTime.Today.AddHours(22)- lastDate).TotalHours;
             results.Add(new() { StartTime = lastDate, DurationHour = converterService.ConvertHourToRounded(Duration) });
             return results;
+        }
+
+        public WorkCalendarItem GetWorkCalendarItemWithWorkItem(int id)
+        {
+            using var applicationDbContext = dbContextFactory.CreateDbContext();
+            return applicationDbContext
+                .WorkCalendarItems
+                .Include(i => i.WorkItem)
+                .Where(j => j.Id == id)
+                .FirstOrDefault();
+        }
+
+        public async Task<WorkCalendarItem?> GetWorkCalendarItemWithWorkItemAsync(int id)
+        {
+            using var applicationDbContext = await dbContextFactory.CreateDbContextAsync();
+            return await applicationDbContext
+                .WorkCalendarItems
+                .Include(i => i.WorkItem)
+                .Where(j => j.Id == id)
+                .FirstOrDefaultAsync();
         }
     }
 }
