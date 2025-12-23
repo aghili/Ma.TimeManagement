@@ -21,9 +21,9 @@ namespace Ma.TimeManagement.Services
             this.statusService = statusService;
         }
 
-        public async Task<IEnumerable<TeamProjectReference>> GetTeamProjectsAsync()
+        public async Task<IEnumerable<TeamProjectReference>> GetTeamProjectsAsync(CancellationToken cancellationToken)
         {
-            using var applicationDbContext = await dbContextFactory.CreateDbContextAsync();
+            using var applicationDbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
             return [.. applicationDbContext.TeamProjects];
         }
 
@@ -33,9 +33,9 @@ namespace Ma.TimeManagement.Services
             return [.. applicationDbContext.TeamProjects];
         }
 
-        public async Task<IEnumerable<WorkItem>> GetWorkItemsAsync()
+        public async Task<IEnumerable<WorkItem>> GetWorkItemsAsync(CancellationToken cancellationToken)
         {
-            using var applicationDbContext = await dbContextFactory.CreateDbContextAsync();
+            using var applicationDbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
             return [.. applicationDbContext.WorkItems];
         }
 
@@ -45,9 +45,9 @@ namespace Ma.TimeManagement.Services
             return [.. applicationDbContext.WorkItems];
         }
 
-        public async Task<TeamProjectReference> AddOrUpdateAsync(TeamProjectReference item)
+        public async Task<TeamProjectReference> AddOrUpdateAsync(TeamProjectReference item,CancellationToken cancellationToken)
         {
-            using var applicationDbContext = await dbContextFactory.CreateDbContextAsync();
+            using var applicationDbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
             TeamProjectReference? entity;
             if ((entity = await applicationDbContext.TeamProjects.FindAsync(item.Id)) != null)
             {
@@ -57,12 +57,12 @@ namespace Ma.TimeManagement.Services
                 applicationDbContext.TeamProjects.Add(item);
             try
             {
-                await applicationDbContext.SaveChangesAsync();
+                await applicationDbContext.SaveChangesAsync(cancellationToken);
             }
             catch (DbUpdateException ex)
             {
                 applicationDbContext.Entry(item).State = EntityState.Modified;
-                await applicationDbContext.SaveChangesAsync();
+                await applicationDbContext.SaveChangesAsync(cancellationToken);
             }
             catch (Exception ex)
             {
@@ -114,9 +114,9 @@ namespace Ma.TimeManagement.Services
             entity.Url = item.Url;
         }
 
-        public async Task<WorkItem> AddOrUpdateAsync(Guid ProjectID, WorkItem item)
+        public async Task<WorkItem> AddOrUpdateAsync(Guid ProjectID, WorkItem item,CancellationToken cancellationToken)
         {
-            using var applicationDbContext = await dbContextFactory.CreateDbContextAsync();
+            using var applicationDbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
             WorkItem? entity;
             if ((entity = await applicationDbContext.WorkItems.FindAsync(item.Id)) != null)
             {
@@ -124,21 +124,21 @@ namespace Ma.TimeManagement.Services
             }
             else
             {
-                var project = applicationDbContext.TeamProjects
+                var project =  await applicationDbContext.TeamProjects
                      .Include(j => j.workItems)
                      .Where(i => i.Id == ProjectID)
-                     .FirstOrDefault();
+                     .FirstOrDefaultAsync(cancellationToken);
                 project.workItems.Add(item);
             }
 
             try
             {
-                await applicationDbContext.SaveChangesAsync();
+                await applicationDbContext.SaveChangesAsync(cancellationToken);
             }
             catch(DbUpdateException ex)
             {
                 applicationDbContext.Entry(item).State = EntityState.Modified;
-                await applicationDbContext.SaveChangesAsync();
+                await applicationDbContext.SaveChangesAsync(cancellationToken);
             }
             catch (Exception ex)
             {
@@ -193,9 +193,9 @@ namespace Ma.TimeManagement.Services
             entity.WorkItemType = item.WorkItemType;
         }
 
-        public async Task<WorkItem?> GetWorkItemAsync(int taskId)
+        public async Task<WorkItem?> GetWorkItemAsync(int taskId, CancellationToken cancellation)
         {
-            using var applicationDbContext = await dbContextFactory.CreateDbContextAsync();
+            using var applicationDbContext = await dbContextFactory.CreateDbContextAsync(cancellation);
             return await applicationDbContext.WorkItems.FindAsync(taskId);
         }
         public WorkItem? GetWorkItem(int taskId)
@@ -204,18 +204,18 @@ namespace Ma.TimeManagement.Services
             return applicationDbContext.WorkItems.Find(taskId);
         }
 
-        public async Task RemoveAsync(TeamProjectReference item)
+        public async Task RemoveAsync(TeamProjectReference item, CancellationToken cancellation)
         {
-            using var applicationDbContext = await dbContextFactory.CreateDbContextAsync();
+            using var applicationDbContext = await dbContextFactory.CreateDbContextAsync(cancellation);
             var entity = await applicationDbContext.TeamProjects
                 .OrderBy(i=>i.Id)
                 .Include(i=>i.workItems)
                 .ThenInclude(j=>j.WorkCalendarItems)
-                .FirstOrDefaultAsync(i=>i.Id == item.Id);
+                .FirstOrDefaultAsync(i=>i.Id == item.Id,cancellation);
             if (entity == null)
                 return;
             applicationDbContext.Remove(entity);
-            await applicationDbContext.SaveChangesAsync();
+            await applicationDbContext.SaveChangesAsync(cancellation);
         }
         public void Remove(TeamProjectReference item)
         {
@@ -231,7 +231,7 @@ namespace Ma.TimeManagement.Services
             applicationDbContext.SaveChanges();
         }
 
-        public async Task RemoveAsync(WorkItem item)
+        public async Task RemoveAsync(WorkItem item, CancellationToken cancellation)
         {
             using var applicationDbContext = await dbContextFactory.CreateDbContextAsync();
             var entity = await applicationDbContext.WorkItems.FindAsync(item.Id);
@@ -251,10 +251,10 @@ namespace Ma.TimeManagement.Services
         }
 
 
-        public async Task<WorkCalendarItem> AddOrUpdateAsync(int WorkItemID, WorkCalendarItem item)
+        public async Task<WorkCalendarItem> AddOrUpdateAsync(int WorkItemID, WorkCalendarItem item, CancellationToken cancellation)
         {
             PerpareItem(item);
-            using var applicationDbContext = await dbContextFactory.CreateDbContextAsync();
+            using var applicationDbContext = await dbContextFactory.CreateDbContextAsync(cancellation);
             WorkCalendarItem? entity;
             if ((entity = await applicationDbContext.WorkCalendarItems.FindAsync(item.Id)) != null)
             {
@@ -262,21 +262,21 @@ namespace Ma.TimeManagement.Services
             }
             else
             {
-                var project = applicationDbContext.WorkItems
+                var workItem = await applicationDbContext.WorkItems
                      .Include(j => j.WorkCalendarItems)
                      .Where(i => i.Id == WorkItemID)
-                     .FirstOrDefault();
-                project.WorkCalendarItems.Add(item);
+                     .FirstOrDefaultAsync(cancellation);
+                workItem.WorkCalendarItems.Add(item);
             }
 
             try
             {
-                await applicationDbContext.SaveChangesAsync();
+                await applicationDbContext.SaveChangesAsync(cancellation);
             }
             catch (DbUpdateException ex)
             {
                 applicationDbContext.Entry(item).State = EntityState.Modified;
-                await applicationDbContext.SaveChangesAsync();
+                await applicationDbContext.SaveChangesAsync(cancellation);
             }
             catch (Exception ex)
             {
@@ -335,9 +335,9 @@ namespace Ma.TimeManagement.Services
             item.Description = item.Description ?? "";
         }
 
-        public async Task<WorkCalendarItem?> GetWorkCalendarItemAsync(int Id)
+        public async Task<WorkCalendarItem?> GetWorkCalendarItemAsync(int Id, CancellationToken cancellation)
         {
-            using var applicationDbContext = await dbContextFactory.CreateDbContextAsync();
+            using var applicationDbContext = await dbContextFactory.CreateDbContextAsync(cancellation);
             return await applicationDbContext.WorkCalendarItems.FindAsync(Id);
         }
         public WorkCalendarItem? GetWorkCalendarItem(int Id)
@@ -346,24 +346,24 @@ namespace Ma.TimeManagement.Services
             return applicationDbContext.WorkCalendarItems.Find(Id);
         }
 
-        public async Task<List<WorkCalendarItem>> GetWorkCalendarItemsDailyAsync(DateTime date)
+        public async Task<List<WorkCalendarItem>> GetWorkCalendarItemsDailyAsync(DateTime date, CancellationToken cancellation)
         {
-            using var applicationDbContext = await dbContextFactory.CreateDbContextAsync();
+            using var applicationDbContext = await dbContextFactory.CreateDbContextAsync(cancellation);
             return await applicationDbContext.WorkCalendarItems
                 .Where(i => i.StartTime >= DateTime.Now.Date && i.StartTime <DateTime.Now.AddDays(1).Date)
-                .ToListAsync();
+                .ToListAsync(cancellation);
         }
         public List<WorkCalendarItem> GetWorkCalendarItemsDaily(DateTime date)
         {
             using var applicationDbContext = dbContextFactory.CreateDbContext();
             return [.. applicationDbContext.WorkCalendarItems.Where(i => i.StartTime >= DateTime.Now.Date && i.StartTime < DateTime.Now.AddDays(1).Date)];
         }
-        public async Task<List<WorkCalendarItem>> GetWorkCalendarItemsRangeAsync(DateTime dateStart, DateTime DateEnd)
+        public async Task<List<WorkCalendarItem>> GetWorkCalendarItemsRangeAsync(DateTime dateStart, DateTime DateEnd, CancellationToken cancellation)
         {
-            using var applicationDbContext = await dbContextFactory.CreateDbContextAsync();
+            using var applicationDbContext = await dbContextFactory.CreateDbContextAsync(cancellation);
             return await applicationDbContext.WorkCalendarItems
                 .Where(i => i.StartTime >= dateStart && i.StartTime < DateEnd)
-                .ToListAsync();
+                .ToListAsync(cancellation);
         }
         public List<WorkCalendarItem> GetWorkCalendarItemsRange(DateTime dateStart, DateTime DateEnd)
         {
@@ -371,10 +371,10 @@ namespace Ma.TimeManagement.Services
             return [.. applicationDbContext.WorkCalendarItems.Where(i => i.StartTime >= dateStart && i.StartTime < DateEnd)];
         }
 
-        public async Task<WorkCalendarItem?> GetWorkCalendarItemLastAsync()
+        public async Task<WorkCalendarItem?> GetWorkCalendarItemLastAsync(CancellationToken cancellation)
         {
-            using var applicationDbContext = await dbContextFactory.CreateDbContextAsync();
-            return await applicationDbContext.WorkCalendarItems.Where(i => i.StartTime.Date == DateTime.Today && !i.Synced).OrderBy(i=>i.StartTime).LastOrDefaultAsync();
+            using var applicationDbContext = await dbContextFactory.CreateDbContextAsync(cancellation);
+            return await applicationDbContext.WorkCalendarItems.Where(i => i.StartTime.Date == DateTime.Today && !i.Synced).OrderBy(i=>i.StartTime).LastOrDefaultAsync(cancellation);
         }
 
         public WorkCalendarItem? GetWorkCalendarItemLast()
@@ -389,19 +389,19 @@ namespace Ma.TimeManagement.Services
             return [.. applicationDbContext.WorkCalendarItems.Where(i => i.Synced == false)];
         }
 
-        public async Task<IEnumerable<WorkCalendarItem>> GetWorkCalendarItemsNotSyncedAsync()
+        public async Task<IEnumerable<WorkCalendarItem>> GetWorkCalendarItemsNotSyncedAsync(CancellationToken cancellationToken)
         {
-            using var applicationDbContext = await dbContextFactory.CreateDbContextAsync();
-            return await applicationDbContext.WorkCalendarItems.Where(i => i.Synced == false).ToListAsync();
+            using var applicationDbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+            return await applicationDbContext.WorkCalendarItems.Where(i => i.Synced == false).ToListAsync(cancellationToken);
         }
 
-        public async Task SetworkCalendarItemSyncedAsync(int id)
+        public async Task SetworkCalendarItemSyncedAsync(int id, CancellationToken cancellation)
         {
-            var item = await GetWorkCalendarItemAsync(id);
+            var item = await GetWorkCalendarItemAsync(id,cancellation);
             if (item == null)
                 return;
             item.Synced = true;
-            await AddOrUpdateAsync(item.WorkItemID ?? 0, item);
+            await AddOrUpdateAsync(item.WorkItemID ?? 0, item,cancellation);
         }
 
         public void SetworkCalendarItemSynced(int id)
@@ -413,13 +413,13 @@ namespace Ma.TimeManagement.Services
             AddOrUpdate(item.WorkItemID ?? 0, item);
         }
 
-        public async Task SetWorkCalendarItemDurationHourAsync(int ID, double durationHour)
+        public async Task SetWorkCalendarItemDurationHourAsync(int ID, double durationHour, CancellationToken cancellation)
         {
-            var item = await GetWorkCalendarItemAsync(ID);
+            var item = await GetWorkCalendarItemAsync(ID,cancellation);
             if (item == null)
                 return;
             item.DurationHour = durationHour;
-            await AddOrUpdateAsync(item.WorkItemID ?? 0, item);
+            await AddOrUpdateAsync(item.WorkItemID ?? 0, item,cancellation);
         }
         public void SetWorkCalendarItemDurationHour(int ID, double durationHour)
         {
@@ -458,13 +458,13 @@ namespace Ma.TimeManagement.Services
             return results;
         }
 
-        public async Task<IEnumerable<WorkCalendarItem>> GetWorkCalendarFreeItemsDailyAsync()
+        public async Task<IEnumerable<WorkCalendarItem>> GetWorkCalendarFreeItemsDailyAsync(CancellationToken cancellation)
         {
-            using var applicationDbContext = await dbContextFactory.CreateDbContextAsync();
+            using var applicationDbContext = await dbContextFactory.CreateDbContextAsync(cancellation);
             var Tasks = await applicationDbContext.WorkCalendarItems
                 .Where(i => i.StartTime >= DateTime.Today && i.StartTime < DateTime.Now.AddDays(1).Date)
                 .OrderBy(i=>i.StartTime)
-                .ToListAsync();
+                .ToListAsync(cancellation);
             if (Tasks.Count == 0)
                 return [new() { StartTime = DateTime.Today.AddHours(8) }];
             List<WorkCalendarItem> results = [];
@@ -496,14 +496,14 @@ namespace Ma.TimeManagement.Services
                 .FirstOrDefault();
         }
 
-        public async Task<WorkCalendarItem?> GetWorkCalendarItemWithWorkItemAsync(int id)
+        public async Task<WorkCalendarItem?> GetWorkCalendarItemWithWorkItemAsync(int id, CancellationToken cancellation)
         {
-            using var applicationDbContext = await dbContextFactory.CreateDbContextAsync();
+            using var applicationDbContext = await dbContextFactory.CreateDbContextAsync(cancellation);
             return await applicationDbContext
                 .WorkCalendarItems
                 .Include(i => i.WorkItem)
                 .Where(j => j.Id == id)
-                .FirstOrDefaultAsync();
+                .FirstOrDefaultAsync(cancellation);
         }
     }
 }

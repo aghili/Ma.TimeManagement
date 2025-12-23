@@ -2,8 +2,6 @@
 using CommunityToolkit.Mvvm.Messaging;
 using Hardcodet.Wpf.TaskbarNotification;
 using Ma.TimeManagement.Models;
-using Ma.TimeManagement.ViewModels;
-using Ma.TimeManagement.Windows;
 using System.Drawing;
 using System.IO;
 using System.Windows;
@@ -13,7 +11,7 @@ namespace Ma.TimeManagement.Services
     public class StatusService : IStatusService
     {
         public TaskbarIcon _notifyIcon;
-
+        
         public StatusService()
         {
             // Create tray icon
@@ -38,7 +36,6 @@ namespace Ma.TimeManagement.Services
 
             // Double-click tray to show window
             _notifyIcon.TrayMouseDoubleClick += (s, args) => App.Current.MainWindow.ShowAndActivate();
-
         }
 
         private void Current_Exit(object sender, ExitEventArgs e)
@@ -46,41 +43,22 @@ namespace Ma.TimeManagement.Services
             _notifyIcon?.Dispose();
         }
 
-        public void SendStatus(BalloonIcon icon,string title, string description)
+        public void SendStatus(EnBalloonIcon icon,string title, string description)
         {
-            StatusModel message = new(icon,title, description);
+            StatusModel message = new(icon, description, title);
             
-            _notifyIcon.ShowBalloonTip(title, description, icon);
+            _notifyIcon.ShowBalloonTip(title, description, (BalloonIcon)icon);
             StrongReferenceMessenger.Default.Send(message,EnStatusAction.Message.ToString());
-        }
-
-        public void RefreshTasks()
-        {
-            StatusActionModel message = new(EnStatusAction.RefreshTasks);
-            StrongReferenceMessenger.Default.Send(message,EnStatusAction.RefreshTasks.ToString());
-        }
-
-        public void RefreshItem(WorkCalendarItem item)
-        {
-            StrongReferenceMessenger.Default.Send(item, EnStatusAction.RefreshItem.ToString());
-        }
-
-        public void RegisterRefreshTasks(object Host,Action value)
-        {
-            StrongReferenceMessenger.Default.Register<StatusModel,string>(Host,EnStatusAction.RefreshTasks.ToString(), (r, m) =>
-            {
-                value.Invoke();
-            });
         }
 
         public void SendStatus(Exception ex)
         {
-            SendStatus(BalloonIcon.Error, "Exception", ex.Message);
+            SendStatus(EnBalloonIcon.Error, "Exception", ex.Message);
         }
 
         public void SendStatus(string status)
         {
-            SendStatus(BalloonIcon.Info, "Info", status);
+            SendStatus(EnBalloonIcon.Info, "Info", status);
         }
 
         public void Stop()

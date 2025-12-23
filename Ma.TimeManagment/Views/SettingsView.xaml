@@ -13,6 +13,8 @@
             <RowDefinition Height="10"/>
             <RowDefinition Height="auto"/>
             <RowDefinition Height="10"/>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="10"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="10"/>
             <RowDefinition Height="auto"/>
@@ -24,7 +26,7 @@
             <ColumnDefinition Width="10"/>
             <ColumnDefinition Width="*"/>
             <ColumnDefinition Width="10"/>
-            <ColumnDefinition Width="auto"/>
+            <ColumnDefinition Width="100"/>
         </Grid.ColumnDefinitions>
         <StackPanel Grid.Row="0" Grid.ColumnSpan="4" HorizontalAlignment="Left" VerticalAlignment="Center">
             <TextBlock Text="Settings" FontSize="24"/>
@@ -33,10 +35,12 @@
         <TextBox Grid.Row="2" Grid.Column="2" VerticalAlignment="Center" IsReadOnly="True" Text="{Binding ServerUrl}"/>
         <Label Grid.Row="4" Grid.Column="0" VerticalAlignment="Center" Content="Collection:"/>
         <TextBox Grid.Row="4" Grid.Column="2" VerticalAlignment="Center" IsReadOnly="False"  Text="{Binding Collection}"/>
-        <Label Grid.Row="6" Grid.Column="0" VerticalAlignment="Center" Content="PAT:"/>
-        <PasswordBox Grid.Row="6" Grid.Column="2" VerticalAlignment="Center" x:Name="PatBox" PasswordChanged="PatBox_PasswordChanged"/>
-        <Button Grid.Row="6" Grid.Column="4" VerticalAlignment="Center" Content="Connect" Command="{Binding ConnectCommand}"/>
-        <GroupBox Grid.Row="8" Grid.Column="0" Header="Projects" Grid.ColumnSpan="6">
+        <Label Grid.Row="6" Grid.Column="0" VerticalAlignment="Center" Content="Bypass system proxy on Local network"/>
+        <ToggleButton Grid.Row="6" Grid.Column="4"  HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Content="Used" IsChecked="{Binding BypassProxyOnLocal}"/>
+        <Label Grid.Row="8" Grid.Column="0" VerticalAlignment="Center" Content="PAT:"/>
+        <PasswordBox Grid.Row="8" Grid.Column="2" x:Name="PatBox" PasswordChanged="PatBox_PasswordChanged"/>
+        <Button Grid.Row="8" Grid.Column="4"  HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Content="Connect" Command="{Binding ConnectCommand}"/>
+        <GroupBox Grid.Row="10" Grid.Column="0" Header="Projects" Grid.ColumnSpan="6">
             <Grid Margin="10">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="auto"/>

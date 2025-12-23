@@ -1,14 +1,7 @@
-﻿using System;
-using System.ComponentModel;
-using System.Drawing;
-using System.IO;
-using System.Reflection;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Forms;
-using System.Windows.Threading;
-using Hardcodet.Wpf.TaskbarNotification;
+﻿using Hardcodet.Wpf.TaskbarNotification;
 using Ma.TimeManagement.Data;
+using Ma.TimeManagement.Models;
+using Ma.TimeManagement.OpenAPIService;
 using Ma.TimeManagement.Services;
 using Ma.TimeManagement.ViewModels;
 using Ma.TimeManagement.Views;
@@ -21,6 +14,18 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using System;
+using System.Buffers.Text;
+using System.ComponentModel;
+using System.Drawing;
+using System.Drawing.Drawing2D;
+using System.IO;
+using System.Net.Http;
+using System.Reflection;
+using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Forms;
+using System.Windows.Threading;
 //using Wpf.Ui.Appearance;
 
 namespace Ma.TimeManagement
@@ -51,6 +56,27 @@ namespace Ma.TimeManagement
                 services.AddTransient<IDataService, DataService>();
                 services.AddTransient<ITimeManagementService, TimeManagementService>();
 
+                services.AddHttpClient<ITokenService,TokenService>((sp, client) => {
+                    //client.BaseAddress = new Uri("https://your-api.com");
+                }).AddTypedClient<MaTimeManagmentApiClient>();
+
+                // 2. Register the Handler
+                services.AddTransient<TokenRefreshHandler>();
+
+                // 3. Register the "Main" version of the client (used by your App)
+                services.AddHttpClient<MaTimeManagmentApiClient>((sp, client) => {
+                    //client.BaseAddress = new Uri("https://your-api.com");
+                })
+                .AddHttpMessageHandler<TokenRefreshHandler>();
+
+                //services.AddTransient<AuthHeaderHandler>();
+
+                //services.AddHttpClient<MaTimeManagmentApiClient>(client =>
+                //{
+                //    client.BaseAddress = new Uri("api.yourdomain.com");
+                //})
+                //.AddHttpMessageHandler<AuthHeaderHandler>();
+
                 services.AddSingleton<INavigationService, NavigationService>();
                 services.AddSingleton<INavigationStore, NavigationStore>();
 #if DEBUGWITHDISABLEAZURE
@@ -73,6 +99,7 @@ namespace Ma.TimeManagement
 
                 //services.AddSingleton<IStaticSettingService, StaticSettingService>();
 
+                services.AddSingleton<IMessageService, MessageService>();
                 services.AddSingleton<IStatusService, StatusService>();
                 services.AddSingleton<IConverterService, ConverterService>();
 
@@ -193,7 +220,7 @@ namespace Ma.TimeManagement
             }
             finally
             {
-                status_service.SendStatus(BalloonIcon.Error,"Error", $"{message}\n{exception.Message}");
+                status_service.SendStatus(EnBalloonIcon.Error,"Error", $"{message}\n{exception.Message}");
             }
         }
     }

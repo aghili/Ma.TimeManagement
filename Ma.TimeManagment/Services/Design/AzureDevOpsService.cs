@@ -5,91 +5,80 @@ namespace Ma.TimeManagement.Services.Design
 {
     public class AzureDevOpsService : IAzureDevOpsService
     {
-        private List<string> Projects { get; set; }
 
         private readonly IStatusService statusService;
         private ISettingsService settingsService;
-        private readonly IDataService dataService;
         private readonly IConverterService converterService;
         //private Dictionary<int?,WorkItem> bufferedWorkItems = [];
         //private Dictionary<Guid, TeamProjectReference> bufferedProjects = [];
         private SemaphoreSlim semaphoreInit = new SemaphoreSlim(1);
         private bool Inited = false;
-        private IEnumerable<WorkItem> workItems = [];
-        private IEnumerable<TeamProjectReference> teamProjects;
+        private ICollection<WorkItemDto> workItems = [];
+        private List<TeamProjectReferenceDto> teamProjects;
 
-        public AzureDevOpsService(IStatusService statusService, ISettingsService settingsService, IDataService dataService, IConverterService converterService)
+        public AzureDevOpsService(IStatusService statusService, ISettingsService settingsService, IConverterService converterService)
         {
             this.statusService = statusService;
             this.settingsService = settingsService;
-            this.dataService = dataService;
             this.converterService = converterService;
 
             var server = settingsService.FirstServer;
-            Task.Factory.StartNew(() =>
-            {
-                Initialize(server.ServerUrl, server.Collection, server.Project, server.PAT);
-            }, TaskCreationOptions.RunContinuationsAsynchronously);
         }
 
-        public void Initialize(string ServerUrl, string Collection, string project, string Pat)
-        {
-            Inited = true;
-        }
+        public bool IsReady { get => Inited; }
 
-        public IEnumerable<WorkItem> WorkItems
+        public ICollection<WorkItemDto> WorkItems
         {
             get => workItems;
         }
 
-        public async Task<IEnumerable<WorkItem>> GetTasks()
+        public async Task<ICollection<WorkItemDto>> GetTasksAsync(CancellationToken cancellationToken)
         {
-            await RefreshWorkItems().ConfigureAwait(false);
-            workItems = await dataService.GetWorkItemsAsync();
+            await RefreshWorkItems(cancellationToken).ConfigureAwait(false);
             return WorkItems;
         }
 
-        public async Task<IEnumerable<TeamProjectReference>> GetProjects()
+        public async Task<ICollection<TeamProjectReferenceDto>> GetProjectsAsync(CancellationToken cancellationToken)
         {
-            await RefreshProjects().ConfigureAwait(false);
-            teamProjects = await dataService.GetTeamProjectsAsync();
+            await RefreshProjects(cancellationToken).ConfigureAwait(false);
             return teamProjects;
         }
-
-        private async Task RefreshProjects()
+        public async Task<TeamProjectReferenceDto> GetProjectAsync(Guid Id,CancellationToken cancellationToken)
+        {
+            return teamProjects.First(i => i.Id == Id);
+        }
+        private async Task RefreshProjects(CancellationToken cancellationToken)
         {
             if (!Inited)
                 try
                 {
-                    CancellationTokenSource cancellationToken = new CancellationTokenSource();
-                    cancellationToken.CancelAfter(10000);
-                    await semaphoreInit.WaitAsync(cancellationToken.Token);
+                    await semaphoreInit.WaitAsync(cancellationToken);
                 }
                 finally { semaphoreInit.Release(); }
             if (!Inited)
             {
                 return;
             }
-            List<TeamProjectReference> Projects = [];
+            List<TeamProjectReferenceDto> Projects = [];
 
-            Projects.Add(new() { Id = new Guid("00000000-0000-0000-0000-000000000001"), Name = "Mahak.CoreOps", State = Microsoft.TeamFoundation.Core.WebApi.ProjectState.WellFormed, Visibility = Microsoft.TeamFoundation.Core.WebApi.ProjectVisibility.Organization });
-            Projects.Add(new() { Id = new Guid("00000000-0000-0000-0000-000000000002"), Name = "Mahak.Sales", State = Microsoft.TeamFoundation.Core.WebApi.ProjectState.WellFormed, Visibility = Microsoft.TeamFoundation.Core.WebApi.ProjectVisibility.Organization });
-            Projects.Add(new() { Id = new Guid("00000000-0000-0000-0000-000000000003"), Name = "Mahak.SMS", State = Microsoft.TeamFoundation.Core.WebApi.ProjectState.WellFormed, Visibility = Microsoft.TeamFoundation.Core.WebApi.ProjectVisibility.Organization });
-            Projects.Add(new() { Id = new Guid("00000000-0000-0000-0000-000000000004"), Name = "Mahak.Kiosk", State = Microsoft.TeamFoundation.Core.WebApi.ProjectState.WellFormed, Visibility = Microsoft.TeamFoundation.Core.WebApi.ProjectVisibility.Organization });
+            Projects.Add(new() { Id = new Guid("00000000-0000-0000-0000-000000000001"), Name = "Mahak.CoreOps", State = ProjectState.WellFormed, Visibility = ProjectVisibility.Organization });
+            Projects.Add(new() { Id = new Guid("00000000-0000-0000-0000-000000000002"), Name = "Mahak.Sales", State = ProjectState.WellFormed, Visibility = ProjectVisibility.Organization });
+            Projects.Add(new() { Id = new Guid("00000000-0000-0000-0000-000000000003"), Name = "Mahak.SMS", State = ProjectState.WellFormed, Visibility = ProjectVisibility.Organization });
+            Projects.Add(new() { Id = new Guid("00000000-0000-0000-0000-000000000004"), Name = "Mahak.Kiosk", State = ProjectState.WellFormed, Visibility = ProjectVisibility.Organization });
 
-            List<TeamProjectReference> most_remove = [];
+            List<TeamProjectReferenceDto> most_remove = [];
 
-            foreach (var project in await dataService.GetTeamProjectsAsync())
+            foreach (var project in teamProjects)
                 if (Projects.Any(t => t.Id == project.Id) == false)
                     most_remove.Add(project);
 
             foreach (var project in most_remove)
-                await dataService.RemoveAsync(project);
+                teamProjects.Remove(project);
             foreach (var project in Projects)
-                await dataService.AddOrUpdateAsync(project);
+                teamProjects.Add(project);
         }
 
-        private async Task RefreshWorkItems()
+        private async Task RefreshWorkItems(CancellationToken cancellationToken)
         {
             if (!Inited)
                 try
@@ -100,53 +89,51 @@ namespace Ma.TimeManagement.Services.Design
                 {
                     semaphoreInit.Release();
                 }
-            List<WorkItem> Tasks = [];
+            List<WorkItemDto> Tasks = [];
 
-            await RefreshProjects();
+            await RefreshProjects(cancellationToken);
             int id = 1;
-            foreach (var project in await dataService.GetTeamProjectsAsync())
+            foreach (var project in teamProjects)
             {
                 List<int> taskIds = [];
 
-                Tasks.Add(new() { Id = id++, CompletedWork = 5, OriginalEstimate = 50, RemainingWork = 20, ProjectID = project.Id, ProjectName = project.Name, State = EnWorkState.Active, Title = project.Name+"title 1", Url = string.Empty, WorkItemType = EnWorkItemType.Task });
-                Tasks.Add(new() { Id = id++, CompletedWork = 6, OriginalEstimate = 51, RemainingWork = 21, ProjectID = project.Id, ProjectName = project.Name, State = EnWorkState.Active, Title = project.Name+"title 2",Url=string.Empty, WorkItemType = EnWorkItemType.Task });
-                Tasks.Add(new() { Id = id++, CompletedWork = 7, OriginalEstimate = 52, RemainingWork = 22, ProjectID = project.Id, ProjectName = project.Name, State = EnWorkState.Active, Title = project.Name+"title 3",Url=string.Empty, WorkItemType = EnWorkItemType.Task });
-                Tasks.Add(new() { Id = id++, CompletedWork = 8, OriginalEstimate = 53, RemainingWork = 23, ProjectID = project.Id, ProjectName = project.Name, State = EnWorkState.Active, Title = project.Name+"title 4",Url=string.Empty, WorkItemType = EnWorkItemType.Task });
-                Tasks.Add(new() { Id = id++, CompletedWork = 9, OriginalEstimate = 54, RemainingWork = 24, ProjectID = project.Id, ProjectName = project.Name, State = EnWorkState.Active, Title = project.Name+"title 5",Url=string.Empty, WorkItemType = EnWorkItemType.Task });
-                Tasks.Add(new() { Id = id++, CompletedWork = 10, OriginalEstimate = 55, RemainingWork = 25, ProjectID = project.Id, ProjectName = project.Name, State = EnWorkState.Active, Title = project.Name+"title 6", Url = string.Empty, WorkItemType = EnWorkItemType.Task });
-                Tasks.Add(new() { Id = id++, CompletedWork = 11, OriginalEstimate = 56, RemainingWork = 26, ProjectID = project.Id, ProjectName = project.Name, State = EnWorkState.Active, Title = project.Name+"title 7", Url = string.Empty, WorkItemType = EnWorkItemType.Task });
-                Tasks.Add(new() { Id = id++, CompletedWork = 12, OriginalEstimate = 57, RemainingWork = 27, ProjectID = project.Id, ProjectName = project.Name, State = EnWorkState.Active, Title = project.Name + "title 8",Url=string.Empty, WorkItemType = EnWorkItemType.Task });
-
-                foreach (var task in Tasks)
-                    await dataService.AddOrUpdateAsync(project.Id, task);
+                Tasks.Add(new() { Id = id++, CompletedWork = 5, OriginalEstimate = 50, RemainingWork = 20, ProjectID = project.Id, ProjectName = project.Name, State = EnWorkState.Active, Title = project.Name + "title 1", Url = string.Empty, WorkItemType = EnWorkItemType.Task });
+                Tasks.Add(new() { Id = id++, CompletedWork = 6, OriginalEstimate = 51, RemainingWork = 21, ProjectID = project.Id, ProjectName = project.Name, State = EnWorkState.Active, Title = project.Name + "title 2", Url = string.Empty, WorkItemType = EnWorkItemType.Task });
+                Tasks.Add(new() { Id = id++, CompletedWork = 7, OriginalEstimate = 52, RemainingWork = 22, ProjectID = project.Id, ProjectName = project.Name, State = EnWorkState.Active, Title = project.Name + "title 3", Url = string.Empty, WorkItemType = EnWorkItemType.Task });
+                Tasks.Add(new() { Id = id++, CompletedWork = 8, OriginalEstimate = 53, RemainingWork = 23, ProjectID = project.Id, ProjectName = project.Name, State = EnWorkState.Active, Title = project.Name + "title 4", Url = string.Empty, WorkItemType = EnWorkItemType.Task });
+                Tasks.Add(new() { Id = id++, CompletedWork = 9, OriginalEstimate = 54, RemainingWork = 24, ProjectID = project.Id, ProjectName = project.Name, State = EnWorkState.Active, Title = project.Name + "title 5", Url = string.Empty, WorkItemType = EnWorkItemType.Task });
+                Tasks.Add(new() { Id = id++, CompletedWork = 10, OriginalEstimate = 55, RemainingWork = 25, ProjectID = project.Id, ProjectName = project.Name, State = EnWorkState.Active, Title = project.Name + "title 6", Url = string.Empty, WorkItemType = EnWorkItemType.Task });
+                Tasks.Add(new() { Id = id++, CompletedWork = 11, OriginalEstimate = 56, RemainingWork = 26, ProjectID = project.Id, ProjectName = project.Name, State = EnWorkState.Active, Title = project.Name + "title 7", Url = string.Empty, WorkItemType = EnWorkItemType.Task });
+                Tasks.Add(new() { Id = id++, CompletedWork = 12, OriginalEstimate = 57, RemainingWork = 27, ProjectID = project.Id, ProjectName = project.Name, State = EnWorkState.Active, Title = project.Name + "title 8", Url = string.Empty, WorkItemType = EnWorkItemType.Task });
             }
-            List<WorkItem> most_remove = [];
+            List<WorkItemDto> most_remove = [];
 
-            foreach (var task in await dataService.GetWorkItemsAsync())
+            foreach (var task in WorkItems)
                 if (Tasks.Any(t => t.Id == task.Id) == false)
                     most_remove.Add(task);
 
             foreach (var task in most_remove)
-                await dataService.RemoveAsync(task);
+                workItems.Remove(task);
         }
 
-        public async Task UpdateWorkItemAsync(JsonPatchDocument patch, int TaskId)
+        public async Task UpdateWorkItemAsync(JsonPatchDocument patch, int TaskId,CancellationToken cancellationToken)
         {
+            return;
         }
 
-        public async Task<WorkItem> GetWorkItemAsync(int TaskId)
+        public async Task<WorkItemDto> GetWorkItemAsync(int TaskId,CancellationToken cancellationToken)
         {
-            return await dataService.GetWorkItemAsync(TaskId);
+            return WorkItems.First(i => i.Id == TaskId);
         }
 
-        public async Task<WorkItem> CreateWorkItemAsync(JsonPatchDocument patch, Guid guid, string type)
-        {
-            return new();
-        }
-
-        public Task WorkItemAddWorkCompleteAsync(int workItemID, double durationHour, string discussionText)
+        public Task WorkItemAddWorkCompleteAsync(int workItemID, double durationHour, string discussionText,CancellationToken cancellationToken)
         {
             return Task.CompletedTask;
+        }
+
+        public async Task<WorkItemDto> CreateWorkItemAsync(string title, EnWorkState State, double originalEstimate, double RemainingWork, double CompletedWork, EnWorkItemType WorkItemType, Guid projectId, string discution,CancellationToken cancellationToken)
+        {
+            return new();
         }
     }
 }

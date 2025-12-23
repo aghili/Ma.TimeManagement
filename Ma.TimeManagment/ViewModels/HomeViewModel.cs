@@ -30,29 +30,26 @@ namespace Ma.TimeManagement.ViewModels
         private readonly ITimeManagementService timeManagementService;
         private readonly IDataService dataService;
         private readonly INavigationService _navigationService;
-        private readonly IAzureDevOpsService azureDevOpsService;
-
-        public HomeViewModel(ILogger<HomeViewModel> logger,ITimeManagementService timeManagementService,IDataService dataService,INavigationService navigationService, IAzureDevOpsService azureDevOpsService, IStatusService statusService)
+     
+        public HomeViewModel(ILogger<HomeViewModel> logger,ITimeManagementService timeManagementService,IDataService dataService,INavigationService navigationService, IStatusService statusService)
         {
             this.logger = logger;
             this.timeManagementService = timeManagementService;
             this.dataService = dataService;
             _navigationService = navigationService;
-            this.azureDevOpsService = azureDevOpsService;
             StatusService = statusService;
             _timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
             _timer.Tick += Timer_Tick;
             _timer.IsEnabled = true;
-            Tasks = [.. azureDevOpsService.WorkItems];
             Task.Factory.StartNew(async () =>
             {
-                Tasks = [.. await azureDevOpsService.GetTasks()];
+                Tasks = [.. await timeManagementService.GetTasksAsync(new CancellationTokenSource().Token)];
                 OnPropertyChanged(nameof(Tasks));
             });
 
             StrongReferenceMessenger.Default.Register<StatusActionModel, string>(this, EnStatusAction.RefreshTasks.ToString(), async (r, m) =>
             {
-                await RefreshTasks();
+                await RefreshTasks(new CancellationTokenSource().Token);
             });
         }
 
@@ -117,17 +114,17 @@ namespace Ma.TimeManagement.ViewModels
         }
 
         [RelayCommand(CanExecute = nameof(CanStart))]
-        private async Task Start()
+        private async Task Start(CancellationToken cancellationToken)
         {
             //ResetTimerState();
             //_timer.Start();
-            await timeManagementService.StartNewTaskAsync(SelectedTask);
+            await timeManagementService.StartNewTaskAsync(SelectedTask,cancellationToken);
             Status = $"Tracking Task #{SelectedTask.Id}: {SelectedTask.Title}";
             UpdateButtonStates();
-            await RefreshTasks();
+            await RefreshTasks(cancellationToken);
         }
         [RelayCommand(CanExecute = nameof(CanStart))]
-        private async Task ShowTask()
+        private async Task ShowTask(CancellationToken cancellationToken)
         {
             //ResetTimerState();
             //_timer.Start();
@@ -152,15 +149,15 @@ namespace Ma.TimeManagement.ViewModels
         //private bool CanResume() => _isPausedDueToIdle;
 
         [RelayCommand(CanExecute = nameof(CanStop))]
-        private async Task Stop()
+        private async Task Stop(CancellationToken cancellationToken)
         {
             //_timer.Stop();
             //await SaveIncrementAsync();
-            await timeManagementService.EndActiveTaskAsync();
+            await timeManagementService.EndActiveTaskAsync(cancellationToken);
             Status = $"Stopped and saved for Task #{SelectedTask?.Id}";
             //ResetTimerState();
             UpdateButtonStates();
-            await RefreshTasks();
+            await RefreshTasks(cancellationToken);
         }
 
         private bool CanStop() => timeManagementService.HaveActiveWork();
@@ -176,14 +173,12 @@ namespace Ma.TimeManagement.ViewModels
         //private bool CanMoveToTop() => SelectedTask != null;
 
         [RelayCommand]
-        private async Task RefreshTasks()
+        private async Task RefreshTasks(CancellationToken cancellationToken)
         {
             try
             {
 
-                Tasks = [.. azureDevOpsService.WorkItems];
-
-                Tasks = [.. await azureDevOpsService.GetTasks()];
+                Tasks = [.. await timeManagementService.GetTasksAsync(cancellationToken)];
                 OnPropertyChanged(nameof(Tasks));
                 Status = "Status: Tasks fetched successfully!";
             }
@@ -195,13 +190,14 @@ namespace Ma.TimeManagement.ViewModels
 
         private async void Timer_Tick(object? sender, EventArgs e)
         {
-            WorkCalendarItem? item =  await timeManagementService.GetActiveCalendarItemAsync();
+            CancellationTokenSource cts = new CancellationTokenSource();
+            WorkCalendarItem? item =  await timeManagementService.GetActiveCalendarItemAsync(cts.Token);
             double duration = 0;
             if (item != null)
             {
                 if (ActiveTaskCalander == null || item.Id != ActiveTaskCalander.Id)
                 {
-                    ActiveTaskCalander = await dataService.GetWorkCalendarItemWithWorkItemAsync(item.Id);
+                    ActiveTaskCalander = await dataService.GetWorkCalendarItemWithWorkItemAsync(item.Id,cts.Token);
                     Status = $"{ActiveTaskCalander.WorkItem?.Id}#:STARTED , {ActiveTaskCalander.WorkItem?.Title}";
                 }
                 duration = (DateTime.Now - ActiveTaskCalander.StartTime).TotalSeconds;

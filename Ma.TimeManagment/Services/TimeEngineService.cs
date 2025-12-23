@@ -40,7 +40,7 @@ namespace Ma.TimeManagement.Services
 
         public override async Task StopAsync(CancellationToken cancellationToken)
         {
-            await timeManagementService.SyncToAzureAsync();
+            await timeManagementService.SyncToAzureAsync(cancellationToken);
 
             await base.StopAsync(cancellationToken);
         }
@@ -50,21 +50,21 @@ namespace Ma.TimeManagement.Services
             try
             {
 
-                var WorkCalendarItemLast = await timeManagementService.GetActiveCalendarItemAsync();
+                var WorkCalendarItemLast = await timeManagementService.GetActiveCalendarItemAsync(stoppingToken);
 
-                await timeManagementService.SyncToAzureExceptActiveOneAsync();
+                await timeManagementService.SyncToAzureExceptActiveOneAsync(stoppingToken);
 
                 if (WorkCalendarItemLast != null)
                 {
                     double DurationHour = timeManagementService.ComputeDurationTime(WorkCalendarItemLast.StartTime, DateTime.Now);
                     if (DurationHour != WorkCalendarItemLast.DurationHour)
                     {
-                        await timeManagementService.SetActiveCalendarDurationHourAsync(DurationHour);
+                        await timeManagementService.SetActiveCalendarDurationHourAsync(DurationHour,stoppingToken);
                     }
                 }
             }
             catch (OperationCanceledException) {
-                await timeManagementService.SyncToAzureAsync();
+                await timeManagementService.SyncToAzureAsync(stoppingToken);
             }
             catch (Exception ex)
             {

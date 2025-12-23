@@ -7,6 +7,14 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ma.TimeManagement", "Ma.Tim
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ma.TimeManagement.Tests", "Ma.TimeManagement.Tests\Ma.TimeManagement.Tests.csproj", "{121D7B78-539E-BF52-4864-CCBBC446607D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ma.TimeManagement.Avalonia", "Ma.TimeManagement.Avalonia\Ma.TimeManagement.Avalonia.csproj", "{49F3EE63-4942-DC21-D003-3FA833BAFBBB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ma.TimeManagement.Api", "Ma.TimeManagement.Api\Ma.TimeManagement.Api.csproj", "{51AB26DF-656B-44D2-98A6-F5F1FE03A458}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ma.TimeManagement.Share", "Ma.TimeManagement.Share\Ma.TimeManagement.Share.csproj", "{5E3E5ACF-BC2C-4DE2-BAFC-AB0EFC72C8E9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ma.TimeManagement.Infrastructure", "Ma.TimeManagement.Infrastructure\Ma.TimeManagement.Infrastructure.csproj", "{3B102338-E031-4663-AE3C-9DEAA1E12C65}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -26,6 +34,30 @@ Global
 		{121D7B78-539E-BF52-4864-CCBBC446607D}.DebugWithDisableAzure|Any CPU.Build.0 = Debug|Any CPU
 		{121D7B78-539E-BF52-4864-CCBBC446607D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{121D7B78-539E-BF52-4864-CCBBC446607D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{49F3EE63-4942-DC21-D003-3FA833BAFBBB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{49F3EE63-4942-DC21-D003-3FA833BAFBBB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{49F3EE63-4942-DC21-D003-3FA833BAFBBB}.DebugWithDisableAzure|Any CPU.ActiveCfg = Debug|Any CPU
+		{49F3EE63-4942-DC21-D003-3FA833BAFBBB}.DebugWithDisableAzure|Any CPU.Build.0 = Debug|Any CPU
+		{49F3EE63-4942-DC21-D003-3FA833BAFBBB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{49F3EE63-4942-DC21-D003-3FA833BAFBBB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{51AB26DF-656B-44D2-98A6-F5F1FE03A458}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{51AB26DF-656B-44D2-98A6-F5F1FE03A458}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{51AB26DF-656B-44D2-98A6-F5F1FE03A458}.DebugWithDisableAzure|Any CPU.ActiveCfg = Debug|Any CPU
+		{51AB26DF-656B-44D2-98A6-F5F1FE03A458}.DebugWithDisableAzure|Any CPU.Build.0 = Debug|Any CPU
+		{51AB26DF-656B-44D2-98A6-F5F1FE03A458}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{51AB26DF-656B-44D2-98A6-F5F1FE03A458}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5E3E5ACF-BC2C-4DE2-BAFC-AB0EFC72C8E9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5E3E5ACF-BC2C-4DE2-BAFC-AB0EFC72C8E9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5E3E5ACF-BC2C-4DE2-BAFC-AB0EFC72C8E9}.DebugWithDisableAzure|Any CPU.ActiveCfg = Debug|Any CPU
+		{5E3E5ACF-BC2C-4DE2-BAFC-AB0EFC72C8E9}.DebugWithDisableAzure|Any CPU.Build.0 = Debug|Any CPU
+		{5E3E5ACF-BC2C-4DE2-BAFC-AB0EFC72C8E9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5E3E5ACF-BC2C-4DE2-BAFC-AB0EFC72C8E9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3B102338-E031-4663-AE3C-9DEAA1E12C65}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3B102338-E031-4663-AE3C-9DEAA1E12C65}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3B102338-E031-4663-AE3C-9DEAA1E12C65}.DebugWithDisableAzure|Any CPU.ActiveCfg = Debug|Any CPU
+		{3B102338-E031-4663-AE3C-9DEAA1E12C65}.DebugWithDisableAzure|Any CPU.Build.0 = Debug|Any CPU
+		{3B102338-E031-4663-AE3C-9DEAA1E12C65}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3B102338-E031-4663-AE3C-9DEAA1E12C65}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

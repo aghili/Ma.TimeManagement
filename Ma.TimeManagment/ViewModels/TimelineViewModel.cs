@@ -5,10 +5,8 @@ using Ma.TimeManagement.Models;
 using Ma.TimeManagement.Services;
 using Microsoft.Extensions.Logging;
 using System.Collections.ObjectModel;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.TrayNotify;
 
 namespace Ma.TimeManagement.ViewModels
 {
@@ -37,18 +35,17 @@ namespace Ma.TimeManagement.ViewModels
 
        
 
-        public TimelineViewModel(ILogger<ITimeLineViewModel> logger,ITimeManagementService timeManagementService,IAzureDevOpsService azureDevOpsService,IDataService dataService, IDialogService dialogService,IStatusService statusService)
+        public TimelineViewModel(ILogger<ITimeLineViewModel> logger,ITimeManagementService timeManagementService,IDataService dataService, IDialogService dialogService,IStatusService statusService)
         {
             this.logger = logger;
             this.timeManagementService = timeManagementService;
-            _azureDevOpsService = azureDevOpsService ?? throw new ArgumentNullException(nameof(azureDevOpsService));
             this.dataService = dataService;
             _dialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
             this.statusService = statusService;
             
-            StartTaskCommand = new RelayCommand(async () => await ExecuteStartTaskAsync());
-            InsertTaskCommand = new RelayCommand(async () => await InsertStartTaskAsync());
-            EndTaskCommand = new RelayCommand(async () => await ExecuteEndTaskAsync());
+            StartTaskCommand = new RelayCommand(async () => await ExecuteStartTaskAsync(new CancellationTokenSource().Token));
+            InsertTaskCommand = new RelayCommand(async () => await InsertStartTaskAsync(new CancellationTokenSource().Token));
+            EndTaskCommand = new RelayCommand(async () => await ExecuteEndTaskAsync(new CancellationTokenSource().Token));
 
             _items.CollectionChanged += (_, __) => OnPropertyChanged(nameof(HasItems));
             
@@ -60,14 +57,15 @@ namespace Ma.TimeManagement.ViewModels
 
             StrongReferenceMessenger.Default.Register<WorkCalendarItem, string>(this, EnStatusAction.RefreshItem.ToString(), async (r, m) =>
             {
-                await RefreshItem(m);
+                CancellationTokenSource cts = new CancellationTokenSource();
+                await RefreshItem(m,cts.Token);
             });
             RefreshTasks();
         }
 
-        private async Task RefreshItem(WorkCalendarItem m)
+        private async Task RefreshItem(WorkCalendarItem m,CancellationToken cancellationToken)
         {
-            await AddTaskToTimelineAsync(m);
+            await AddTaskToTimelineAsync(m,cancellationToken);
         }
 
         private void RefreshTasks()
@@ -76,10 +74,11 @@ namespace Ma.TimeManagement.ViewModels
             {
                 try
                 {
-                    var refreshed = await dataService.GetWorkCalendarItemsDailyAsync(DateTime.Now);
+                    CancellationTokenSource cts = new CancellationTokenSource();
+                    var refreshed = await dataService.GetWorkCalendarItemsDailyAsync(DateTime.Now,cts.Token);
                     Application.Current?.Dispatcher?.Invoke(async () =>
                     {
-                        await AddTasksToTimeline(refreshed);
+                        await AddTasksToTimeline(refreshed,cts.Token);
                     });
                 }
                 catch (Exception ex)
@@ -99,7 +98,6 @@ namespace Ma.TimeManagement.ViewModels
 
         private readonly ILogger<ITimeLineViewModel> logger;
         private readonly ITimeManagementService timeManagementService;
-        private readonly IAzureDevOpsService _azureDevOpsService;
         private readonly IDataService dataService;
         private readonly IDialogService _dialogService;
         private readonly IStatusService statusService;
@@ -109,85 +107,87 @@ namespace Ma.TimeManagement.ViewModels
 
         public event EventHandler<WorkItem> TaskStarted;
 
-        private async Task ExecuteEndTaskAsync()
+        private async Task ExecuteEndTaskAsync(CancellationToken cancellationToken)
         {
-            await timeManagementService.EndActiveTaskAsync();
+            await timeManagementService.EndActiveTaskAsync(cancellationToken);
         }
 
-        private async Task ExecuteStartTaskAsync()
+        private async Task ExecuteStartTaskAsync(CancellationToken cancellationToken)
         {
             var vm = new TaskSelectionViewModel();
 
             // Use cached tasks
-            if (_azureDevOpsService.WorkItems != null)
+            IEnumerable<WorkItem> tasks = await timeManagementService.GetTasksAsync(cancellationToken);
+            if (tasks != null)
             {
-                foreach (var w in _azureDevOpsService.WorkItems.OrderBy(x => x.ProjectName).ThenBy(x => x.Title))
+                foreach (var w in tasks.OrderBy(x => x.ProjectName).ThenBy(x => x.Title))
                     vm.AvailableTasks.Add(w);
             }
 
-            // Background refresh (just like HomeViewModel)
-            Task.Factory.StartNew(async () =>
-            {
-                try
-                {
-                    var refreshed = await _azureDevOpsService.GetTasks();
-                    Application.Current?.Dispatcher?.Invoke(() =>
-                    {
-                        vm.AvailableTasks.Clear();
-                        foreach (var w in refreshed.OrderBy(x => x.ProjectName).ThenBy(x => x.Title))
-                            vm.AvailableTasks.Add(w);
-                    });
-                }
-                catch
-                {
-                    // Ignore refresh errors; keep seed
-                }
-            });
+            //// Background refresh (just like HomeViewModel)
+            //Task.Factory.StartNew(async () =>
+            //{
+            //    try
+            //    {
+            //        var refreshed = await _azureDevOpsService.GetTasks();
+            //        Application.Current?.Dispatcher?.Invoke(() =>
+            //        {
+            //            vm.AvailableTasks.Clear();
+            //            foreach (var w in refreshed.OrderBy(x => x.ProjectName).ThenBy(x => x.Title))
+            //                vm.AvailableTasks.Add(w);
+            //        });
+            //    }
+            //    catch
+            //    {
+            //        // Ignore refresh errors; keep seed
+            //    }
+            //});
 
             var result = _dialogService.ShowDialog(vm);
             if (result == true && vm.SelectedTask != null)
             {
-                await timeManagementService.StartNewTaskAsync(vm.SelectedTask);
+                await timeManagementService.StartNewTaskAsync(vm.SelectedTask, cancellationToken);
             }
         }
 
-        private async Task InsertStartTaskAsync()
+        private async Task InsertStartTaskAsync(CancellationToken cancellationToken)
         {
             var vm = new TaskSelectionViewModel();
 
             // Use cached tasks
-            if (_azureDevOpsService.WorkItems != null)
+            IEnumerable<WorkItem> tasks = await timeManagementService.GetTasksAsync(cancellationToken);
+            if (tasks != null)
             {
-                foreach (var w in _azureDevOpsService.WorkItems.OrderBy(x => x.ProjectName).ThenBy(x => x.Title))
+                foreach (var w in tasks.OrderBy(x => x.ProjectName).ThenBy(x => x.Title))
                     vm.AvailableTasks.Add(w);
             }
 
-            // Background refresh (just like HomeViewModel)
-            Task.Factory.StartNew(async () =>
-            {
-                try
-                {
-                    var refreshed = await _azureDevOpsService.GetTasks();
-                    var CalenderFreeItems = await dataService.GetWorkCalendarFreeItemsDailyAsync();
-                    Application.Current?.Dispatcher?.Invoke(() =>
-                    {
-                        vm.AvailableTasks.Clear();
-                        foreach (var w in refreshed.OrderBy(x => x.ProjectName).ThenBy(x => x.Title))
-                            vm.AvailableTasks.Add(w);
-                        foreach(var w in CalenderFreeItems)
-                        vm.WorkCalendarItems.Add( w);
-                    });
-                }
-                catch
-                {
-                    // Ignore refresh errors; keep seed
-                }
-            });
+            //// Background refresh (just like HomeViewModel)
+            //Task.Factory.StartNew(async () =>
+            //{
+            //    try
+            //    {
+            //        var refreshed = await _azureDevOpsService.GetTasks();
+            //        var CalenderFreeItems = await dataService.GetWorkCalendarFreeItemsDailyAsync();
+            //        Application.Current?.Dispatcher?.Invoke(() =>
+            //        {
+            //            vm.AvailableTasks.Clear();
+            //            foreach (var w in refreshed.OrderBy(x => x.ProjectName).ThenBy(x => x.Title))
+            //                vm.AvailableTasks.Add(w);
+            //            foreach(var w in CalenderFreeItems)
+            //            vm.WorkCalendarItems.Add( w);
+            //        });
+            //    }
+            //    catch
+            //    {
+            //        // Ignore refresh errors; keep seed
+            //    }
+            //});
 
             var result = _dialogService.ShowDialog(vm);
             if (result == true && vm.SelectedTask != null && vm.SelectedWorkCalendarItem != null)
             {
-                await timeManagementService.InsertNewTaskAsync(vm.SelectedTask,vm.SelectedWorkCalendarItem.StartTime,vm.Duration);
+                await timeManagementService.InsertNewTaskAsync(vm.SelectedTask,vm.SelectedWorkCalendarItem.StartTime,vm.Duration,cancellationToken);
             }
         }
 
@@ -204,24 +204,24 @@ namespace Ma.TimeManagement.ViewModels
         //    await AddTaskToTimelineAsync(item);
         //}
 
-        public async Task AddTasksToTimeline(IEnumerable<WorkCalendarItem> tasks)
+        public async Task AddTasksToTimeline(IEnumerable<WorkCalendarItem> tasks,CancellationToken cancellationToken)
         {
             foreach (WorkCalendarItem task in tasks)
             {
-                await AddTaskToTimelineAsync(task);
+                await AddTaskToTimelineAsync(task,cancellationToken);
             }
             OnPropertyChanged(nameof(HasItems));
         }
 
         private Random rnd = new Random();
-        public async Task AddTaskToTimelineAsync(WorkCalendarItem task)
+        public async Task AddTaskToTimelineAsync(WorkCalendarItem task,CancellationToken cancellationToken)
         {
             if (task == null) return;
 
             var item = Items.FirstOrDefault(i => i.TaskId == task.Id);
             if (item == null)
             {
-                var workItem = await dataService.GetWorkItemAsync(task.WorkItemID ?? 0);
+                var workItem = await dataService.GetWorkItemAsync(task.WorkItemID ?? 0,cancellationToken);
                 if (workItem == null) return;
                 byte[] bytes = [0, 0, 0];
                 rnd.NextBytes(bytes);

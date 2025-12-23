@@ -1,5 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Ma.TimeManagement.Models;
 using Ma.TimeManagement.Services;
 using Ma.TimeManagement.Views;
 using Microsoft.Extensions.Logging;
@@ -14,12 +15,12 @@ namespace Ma.TimeManagement.ViewModels
 {
     public partial class CreateWorkItemViewModel : ObservableObject
     {
-        public CreateWorkItemViewModel(ILogger<CreateWorkItemViewModel> logger,INavigationService navigationService,IAzureDevOpsService azureDevOpsService,IStatusService statusService)
+        public CreateWorkItemViewModel(ILogger<CreateWorkItemViewModel> logger,INavigationService navigationService,IAzureDevOpsService azureDevOpsService,IMessageService messageService)
         {
             this.logger = logger;
             this.navigationService = navigationService;
             this.azureDevOpsService = azureDevOpsService;
-            this.statusService = statusService;
+            this.messageService = messageService;
         }
         
         [RelayCommand]
@@ -39,40 +40,17 @@ namespace Ma.TimeManagement.ViewModels
         private readonly ILogger<CreateWorkItemViewModel> logger;
         private readonly INavigationService navigationService;
         private readonly IAzureDevOpsService azureDevOpsService;
-        private readonly IStatusService statusService;
+        private readonly IMessageService messageService;
 
         [RelayCommand(CanExecute = nameof(CanCreate))]
-        private async Task Create()
+        private async Task Create(CancellationToken cancellationToken)
         {
-            var type = SelectedTypeIndex == 0 ? "Task" : "User Story";
+            var type = SelectedTypeIndex == 0 ? EnWorkItemType.Task : EnWorkItemType.UserStory;
             try
             {
-                var patch = new JsonPatchDocument();
-                patch.Add(new JsonPatchOperation { Operation = Operation.Add, Path = "/fields/System.Title", Value = Title });
-
-                if (!string.IsNullOrEmpty(Description))
-                {
-                    patch.Add(new JsonPatchOperation { Operation = Operation.Add, Path = "/fields/System.Description", Value = Description });
-                }
-
-                if (!string.IsNullOrEmpty(ParentId) && int.TryParse(ParentId, out int parentId))
-                {
-                    var parent = await azureDevOpsService.GetWorkItemAsync(parentId);
-                    patch.Add(new JsonPatchOperation
-                    {
-                        Operation = Operation.Add,
-                        Path = "/relations/-",
-                        Value = new WorkItemRelation
-                        {
-                            Rel = "System.LinkTypes.Hierarchy-Reverse",
-                            Url = parent.Url
-                        }
-                    });
-                }
-
-                var created = await azureDevOpsService.CreateWorkItemAsync(patch,Guid.NewGuid(), type);
+                var created = await azureDevOpsService.CreateWorkItemAsync(Title,Models.EnWorkState.New,0,0,0,type,Guid.NewGuid(), Description,cancellationToken);
                 Application.Current.Dispatcher.Invoke(() => MessageBox.Show($"Created {type} ID: {created.Id}"));
-                statusService.RefreshTasks();
+                messageService.RefreshTasks();
                 NavigateToHome();
             }
             catch (Exception ex)

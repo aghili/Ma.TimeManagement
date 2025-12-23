@@ -11,24 +11,23 @@ namespace Ma.TimeManagement.ViewModels
     {
         private readonly ILogger<SettingsViewModel> logger;
         private readonly INavigationService _navigationService;
-        private readonly IAzureDevOpsService azureDevOpsService;
         private readonly ISettingsService settingsService;
-        private readonly IStatusService statusService;
+        private readonly IMessageService messageService;
 
         public AzureServerItemModel Server { get; }
 
-        public SettingsViewModel(ILogger<SettingsViewModel> logger,INavigationService navigationService,IAzureDevOpsService azureDevOpsService,ISettingsService settingsService,IStatusService statusService)
+        public SettingsViewModel(ILogger<SettingsViewModel> logger,INavigationService navigationService,ISettingsService settingsService,IMessageService messageService)
         {
             this.logger = logger;
             _navigationService = navigationService;
-            this.azureDevOpsService = azureDevOpsService;
             this.settingsService = settingsService;
-            this.statusService = statusService;
+            this.messageService = messageService;
             Server = settingsService.FirstServer;
             serverUrl = Server.ServerUrl;
             collection = Server.Collection;
             project = Server.Project;
             _pat = Server.PAT;
+            _bypassProxyOnLocal = settingsService.BypassProxyOnLocal;
         }
 
         [RelayCommand]
@@ -46,23 +45,25 @@ namespace Ma.TimeManagement.ViewModels
         [ObservableProperty]
         private string _pat;
 
+        [ObservableProperty]
+        private bool _bypassProxyOnLocal;
+
         [RelayCommand]
         private void Connect()
         {
             try
             {
-                azureDevOpsService.Initialize(ServerUrl, Collection, Project,Pat);
-                Application.Current.Dispatcher.Invoke(() => MessageBox.Show("Connected successfully!"));
-                settingsService.FirstServer = new AzureServerItemModel
-                {
-                    ServerUrl = ServerUrl,
-                    Collection = Collection,
-                    Project = Project,
-                    PAT = Pat
-                };
-                statusService.RefreshTasks();
+                    settingsService.FirstServer = new AzureServerItemModel
+                    {
+                        ServerUrl = ServerUrl,
+                        Collection = Collection,
+                        Project = Project,
+                        PAT = Pat
+                    };
+                    settingsService.BypassProxyOnLocal = BypassProxyOnLocal;
+                    messageService.RefreshTasks();
 
-                NavigateToHome();
+                    NavigateToHome();
             }
             catch (Exception ex)
             {
