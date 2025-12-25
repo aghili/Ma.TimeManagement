@@ -39,15 +39,22 @@ namespace Ma.TimeManagement.Api.Controllers
         [HttpPost]
         public async Task<WorkItemDto> Post([FromBody] WorkItemAddDto item,CancellationToken cancellationToken)
         {
-            return await azureDevOpsService.CreateWorkItemAsync(item.Title, item.State, item.OriginalEstimate ?? 0, item.RemainingWork ?? 0, item.CompletedWork ?? 0, item.WorkItemType, item.ProjectID, item.Discution,cancellationToken);
+            return await azureDevOpsService.CreateWorkItemAsync(item,cancellationToken);
         }
 
         // PUT api/<WorkItemsController>/5
         [HttpPut("{id}")]
-        public async Task Put(int id, [FromBody] WorkItemAddDto item,CancellationToken cancellationToken)
+        public async Task Put(int id, [FromBody] WorkItemAddDto workItem,CancellationToken cancellationToken)
         {
             var jsonPatch = new Microsoft.VisualStudio.Services.WebApi.Patch.Json.JsonPatchDocument();
-            await azureDevOpsService.UpdateWorkItemAsync(jsonPatch, id,cancellationToken);
+            await azureDevOpsService.UpdateWorkItemAsync(id,workItem,cancellationToken);
+        }
+        // PUT api/<WorkItemsController>/5
+        [HttpPatch("{id}")]
+        public async Task Patch(int id, [FromBody] WorkItemUpdateDto workItem, CancellationToken cancellationToken)
+        {
+            var jsonPatch = new Microsoft.VisualStudio.Services.WebApi.Patch.Json.JsonPatchDocument();
+            await azureDevOpsService.UpdateWorkItemAsync(id, workItem, cancellationToken);
         }
 
         // DELETE api/<WorkItemsController>/5

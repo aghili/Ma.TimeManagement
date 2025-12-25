@@ -1,30 +1,19 @@
-﻿using Hardcodet.Wpf.TaskbarNotification;
-using Ma.TimeManagement.Data;
+﻿using Ma.TimeManagement.Data;
 using Ma.TimeManagement.Models;
 using Ma.TimeManagement.OpenAPIService;
 using Ma.TimeManagement.Services;
 using Ma.TimeManagement.ViewModels;
-using Ma.TimeManagement.Views;
 using Ma.TimeManagement.Windows;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Internal;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Buffers.Text;
-using System.ComponentModel;
-using System.Drawing;
-using System.Drawing.Drawing2D;
-using System.IO;
+using System.Net;
 using System.Net.Http;
-using System.Reflection;
-using System.Threading.Tasks;
+using System.Net.Sockets;
 using System.Windows;
-using System.Windows.Forms;
 using System.Windows.Threading;
 //using Wpf.Ui.Appearance;
 
@@ -52,7 +41,9 @@ namespace Ma.TimeManagement
                 context.Configuration["DefaultConnection"] = connectionString;
 
                 services.AddSingleton<IStaticDataService>(staticDataInstance);
-                services.AddDbContextFactory<ApplicationDbContext>(options => options.UseSqlite(connectionString));
+                services.AddSingleton<ICustomDnsResolver,CustomDnsResolver>();
+                services.AddDbContextFactory<ApplicationDbContext>(options =>
+                    options.UseSqlite(connectionString));//b => b.MigrationsAssembly("Ma.TimeManagement.Migrations.Sqlite"))
                 services.AddTransient<IDataService, DataService>();
                 services.AddTransient<ITimeManagementService, TimeManagementService>();
 
@@ -67,6 +58,32 @@ namespace Ma.TimeManagement
                 services.AddHttpClient<MaTimeManagmentApiClient>((sp, client) => {
                     //client.BaseAddress = new Uri("https://your-api.com");
                 })
+                  .ConfigurePrimaryHttpMessageHandler(sp =>
+                  {
+                      var dns = sp.GetRequiredService<ICustomDnsResolver>();
+
+                      return new SocketsHttpHandler
+                      {
+                          ConnectCallback = async (context, ct) =>
+                          {
+                              IPAddress ip = IPAddress.Any;
+                              int port = context.DnsEndPoint.Port;
+                              if (!string.IsNullOrEmpty(context.InitialRequestMessage.Headers.Host))
+                              {
+                                  var host_spl = context.InitialRequestMessage.Headers.Host.Split(':');
+                                  ip = dns.Resolve(host_spl[0] ?? context.DnsEndPoint.Host);
+                                  port = int.Parse(host_spl[1]);
+                              }else
+                              {
+                                  ip = dns.Resolve(context.DnsEndPoint.Host);
+                              }
+                              var socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
+                              await socket.ConnectAsync(new IPEndPoint(ip, port), ct);
+                              return new NetworkStream(socket, ownsSocket: true);
+                          },
+                          SslOptions = { RemoteCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true }
+                      };
+                  })
                 .AddHttpMessageHandler<TokenRefreshHandler>();
 
                 //services.AddTransient<AuthHeaderHandler>();
@@ -126,7 +143,16 @@ namespace Ma.TimeManagement
 
                 using var applicationDbContext = dbContextFactory.CreateDbContext();
 
-                applicationDbContext.Database.Migrate();
+                try
+                {
+                    applicationDbContext.Database.Migrate();
+                }
+                catch
+                {
+                    applicationDbContext.Database.CloseConnection();
+                    applicationDbContext.Database.EnsureDeleted();
+                    applicationDbContext.Database.Migrate();
+                }
             }
 
             SetupExceptionHandling();

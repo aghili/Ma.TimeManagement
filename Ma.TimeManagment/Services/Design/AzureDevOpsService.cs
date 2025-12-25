@@ -116,11 +116,14 @@ namespace Ma.TimeManagement.Services.Design
                 workItems.Remove(task);
         }
 
-        public async Task UpdateWorkItemAsync(JsonPatchDocument patch, int TaskId,CancellationToken cancellationToken)
+        public async Task UpdateWorkItemAsync(int id,WorkItemUpdateDto workItem,CancellationToken cancellationToken)
         {
             return;
         }
-
+   public async Task UpdateWorkItemAsync(int id,WorkItemAddDto workItem,CancellationToken cancellationToken)
+        {
+            return;
+        }
         public async Task<WorkItemDto> GetWorkItemAsync(int TaskId,CancellationToken cancellationToken)
         {
             return WorkItems.First(i => i.Id == TaskId);
@@ -131,7 +134,7 @@ namespace Ma.TimeManagement.Services.Design
             return Task.CompletedTask;
         }
 
-        public async Task<WorkItemDto> CreateWorkItemAsync(string title, EnWorkState State, double originalEstimate, double RemainingWork, double CompletedWork, EnWorkItemType WorkItemType, Guid projectId, string discution,CancellationToken cancellationToken)
+        public async Task<WorkItemDto> CreateWorkItemAsync(WorkItemAddDto workItem,CancellationToken cancellationToken)
         {
             return new();
         }

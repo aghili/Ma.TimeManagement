@@ -15,6 +15,6 @@
 
 	</ItemGroup>
 	<ItemGroup>
-		<ProjectReference Include="..\Ma.TimeManagement.Infrastructure\Ma.TimeManagement.Infrastructure.csproj" />
+	  <ProjectReference Include="..\Ma.TimeManagement.Data\Ma.TimeManagement.Data.csproj" />
 	</ItemGroup>
 </Project>

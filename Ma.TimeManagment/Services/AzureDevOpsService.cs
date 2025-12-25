@@ -4,6 +4,7 @@ using Microsoft.VisualStudio.Services.WebApi.Patch.Json;
 
 namespace Ma.TimeManagement.Services
 {
+
     internal class AzureDevOpsService : IAzureDevOpsService
     {
         private MaTimeManagmentApiClient clientmaTimeManagement;
@@ -15,10 +16,9 @@ namespace Ma.TimeManagement.Services
             this.converterService = converterService;
         }
 
-        public async Task<Models.WorkItemDto> CreateWorkItemAsync(string title, Models.EnWorkState State, double originalEstimate, double RemainingWork, double CompletedWork, Models.EnWorkItemType WorkItemType, Guid projectId, string discution,CancellationToken cancellationToken)
+        public async Task<Models.WorkItemDto> CreateWorkItemAsync(WorkItemAddDto workItem,CancellationToken cancellationToken)
         {
-            var workItemDto = new WorkItemAddDto() { Title = title, State = State, OriginalEstimate = originalEstimate, RemainingWork = RemainingWork, CompletedWork = CompletedWork, WorkItemType = WorkItemType, ProjectID = projectId, Discution = discution };
-            return await clientmaTimeManagement.WorkItemsPOSTAsync(workItemDto,cancellationToken);
+            return await clientmaTimeManagement.WorkItemsPOSTAsync(workItem,cancellationToken);
         }
 
         public async Task<Models.TeamProjectReferenceDto> GetProjectAsync(Guid id, CancellationToken cancellationToken)
@@ -41,14 +41,35 @@ namespace Ma.TimeManagement.Services
             return await clientmaTimeManagement.WorkItemsGETAsync(TaskId,cancellationToken);
         }
 
-        public Task UpdateWorkItemAsync(JsonPatchDocument patch, int TaskId,CancellationToken cancellationToken)
+        public async Task UpdateWorkItemAsync(int TaskId,WorkItemAddDto workItem, CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
+            await clientmaTimeManagement.WorkItemsPUTAsync(TaskId, workItem, cancellationToken);
+        }
+  public async Task UpdateWorkItemAsync(int TaskId,WorkItemUpdateDto workItem, CancellationToken cancellationToken)
+        {
+            await clientmaTimeManagement.WorkItemsPATCHAsync(TaskId, workItem, cancellationToken);
         }
 
-        public Task WorkItemAddWorkCompleteAsync(int workItemID, double durationHour, string discussionText,CancellationToken cancellationToken)
+        public async Task WorkItemAddWorkCompleteAsync(int workItemID, double durationHour, string discussionText,CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
+            var workItem = await GetWorkItemAsync(workItemID, cancellationToken);
+            if (workItem == null)
+                return;
+            var currentCompleted = workItem.CompletedWork;
+            var currentRemainingWork = workItem.RemainingWork;
+            var TotalHours = converterService.ConvertHourToRounded(currentCompleted + durationHour);
+            var remainingWork = (currentRemainingWork - TotalHours);
+            remainingWork = converterService.ConvertHourToRounded(remainingWork);
+
+            var workItemUpdate = new WorkItemUpdateDto()
+            {
+                CompletedWork = TotalHours,
+                RemainingWork = remainingWork < 0 ? 0 : remainingWork,
+                Discution = discussionText
+            };
+
+            await clientmaTimeManagement.WorkItemsPATCHAsync(workItemID, workItemUpdate , cancellationToken);
+
         }
     }
 }

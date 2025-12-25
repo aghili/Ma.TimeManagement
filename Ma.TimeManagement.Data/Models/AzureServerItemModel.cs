@@ -6,7 +6,7 @@ namespace Ma.TimeManagement.Models
     public class AzureServerItemModel
     {
         [DataMember]
-        public string ServerUrl { set; get; } = "https://cicd-server";
+        public string ServerUrl { set; get; } = "http://cicd-server";
 
         [DataMember]
         public string Collection { set; get; } = "MahakSolutions";

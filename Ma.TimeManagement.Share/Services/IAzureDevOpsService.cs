@@ -5,12 +5,13 @@ namespace Ma.TimeManagement.Services
 {
     public interface IAzureDevOpsService
     {
-        Task<WorkItemDto> CreateWorkItemAsync(string title, EnWorkState State, double originalEstimate, double RemainingWork, double CompletedWork, EnWorkItemType WorkItemType, Guid projectId, string discution,CancellationToken cancellationToken);
+        Task<WorkItemDto> CreateWorkItemAsync(WorkItemAddDto workItem,CancellationToken cancellationToken);
         Task<ICollection<TeamProjectReferenceDto>> GetProjectsAsync(CancellationToken cancellationToken);
         Task<ICollection<WorkItemDto>> GetTasksAsync(CancellationToken cancellationToken);
-        Task<WorkItemDto?> GetWorkItemAsync(int TaskId, CancellationToken cancellationToken);
-        Task UpdateWorkItemAsync(JsonPatchDocument patch, int TaskId,CancellationToken cancellationToken);
-        Task WorkItemAddWorkCompleteAsync(int workItemID, double durationHour, string discussionText, CancellationToken cancellationToken);
+        Task<WorkItemDto?> GetWorkItemAsync(int id, CancellationToken cancellationToken);
+        Task UpdateWorkItemAsync(int id,WorkItemUpdateDto workItem, CancellationToken cancellationToken);
+        Task WorkItemAddWorkCompleteAsync(int id, double durationHour, string discussionText, CancellationToken cancellationToken);
         Task<TeamProjectReferenceDto?> GetProjectAsync(Guid id, CancellationToken cancellationToken);
+        Task UpdateWorkItemAsync(int id, WorkItemAddDto workItem, CancellationToken cancellationToken);
     }
 }

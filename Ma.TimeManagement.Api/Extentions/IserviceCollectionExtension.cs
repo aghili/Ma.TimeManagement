@@ -1,22 +1,22 @@
 ﻿using Ma.TimeManagement.Data;
 using Ma.TimeManagement.Services;
-using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using System;
 
 namespace Ma.TimeManagement.Api.Extentions
 {
     public static class IserviceCollectionExtension 
     {
-        public static IServiceCollection AddLocalServices(this IServiceCollection services)
+        public static IServiceCollection AddLocalServices(this IServiceCollection services,WebApplicationBuilder hostBuilder)
         {
-            var staticDataInstance = new StaticDataService();
+            services.AddSingleton<IStaticDataService, StaticDataService>();
             services.AddSingleton<IUserService, UserService>();
-            services.AddSingleton<IPatEncryption, PatEncryption>();
+            services.AddSingleton<IPatEncryption, PatEncryptionNone>();
             services.AddScoped<ICurrentUserPatService, CurrentUserPatService>();
             services.AddScoped<IAzureDevOpsService, AzureDevOpsService>();
-            var connectionString = new SqliteConnectionStringBuilder() { DataSource = staticDataInstance.PathFullDatabase, Cache = SqliteCacheMode.Shared, Pooling = true }.ConnectionString;
-            services.AddSingleton<IStaticDataService>(staticDataInstance);
-            services.AddDbContextFactory<ApplicationDbContext>(options => options.UseSqlite(connectionString));
+            services.AddDbContextFactory<ApplicationDbContext>(options =>
+                options.UseSqlServer(hostBuilder.Configuration.GetConnectionString("DefaultConnection"),
+                b => b.MigrationsAssembly("Ma.TimeManagement.Migrations.SqlServer")));
             services.AddScoped<ISettingsService, SettingsService>();
             services.AddScoped<IStatusService, StatusServiceConsole>();
             services.AddScoped<IConverterService, ConverterService>();

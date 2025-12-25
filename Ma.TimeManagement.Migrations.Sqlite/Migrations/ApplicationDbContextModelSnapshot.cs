@@ -3,22 +3,19 @@ using System;
 using Ma.TimeManagement.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
 
-namespace Ma.TimeManagement.Migrations
+namespace Ma.TimeManagement.Migrations.Sqlite.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20251208131321_Add_user")]
-    partial class Add_user
+    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
     {
-        /// <inheritdoc />
-        protected override void BuildTargetModel(ModelBuilder modelBuilder)
+        protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "9.0.11");
+            modelBuilder.HasAnnotation("ProductVersion", "10.0.1");
 
             modelBuilder.Entity("Ma.TimeManagement.Models.TeamProjectReference", b =>
                 {
@@ -141,9 +138,6 @@ namespace Ma.TimeManagement.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<Guid>("ProjectReferenceId")
-                        .HasColumnType("TEXT");
-
                     b.Property<double>("RemainingWork")
                         .HasColumnType("REAL");
 
@@ -163,7 +157,7 @@ namespace Ma.TimeManagement.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ProjectReferenceId");
+                    b.HasIndex("ProjectID");
 
                     b.ToTable("WorkItems");
                 });
@@ -181,7 +175,7 @@ namespace Ma.TimeManagement.Migrations
                 {
                     b.HasOne("Ma.TimeManagement.Models.TeamProjectReference", "ProjectReference")
                         .WithMany("workItems")
-                        .HasForeignKey("ProjectReferenceId")
+                        .HasForeignKey("ProjectID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 

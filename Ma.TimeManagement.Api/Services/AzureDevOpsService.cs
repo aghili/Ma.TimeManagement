@@ -142,11 +142,65 @@ namespace Ma.TimeManagement.Services
                 Text = ""
             },Project,TaskId);
         }
-
-        public async Task UpdateWorkItemAsync(JsonPatchDocument patch, int TaskId,CancellationToken cancellationToken)
+  public async Task UpdateWorkItemAsync(int TaskId, WorkItemAddDto workItem, CancellationToken cancellationToken)
         {
             using var connection = await CreateConnectionAsync(cancellationToken);
             using var WitClient = connection.GetClient<WorkItemTrackingHttpClient>(cancellationToken);
+
+            var patch = new JsonPatchDocument();
+            if (workItem.CompletedWork != null)
+                patch.Add(new JsonPatchOperation
+                {
+                    Operation = Operation.Add,
+                    Path = "/fields/Microsoft.VSTS.Scheduling.CompletedWork",
+                    Value = workItem.CompletedWork
+                });
+            if (workItem.RemainingWork != null)
+                patch.Add(new JsonPatchOperation
+                {
+                    Operation = Operation.Add,
+                    Path = "/fields/Microsoft.VSTS.Scheduling.RemainingWork",
+                    Value = workItem.RemainingWork
+                });
+            if (!string.IsNullOrEmpty(workItem.Discution))
+                patch.Add(new JsonPatchOperation
+                {
+                    Operation = Operation.Add,
+                    Path = "/fields/System.History",
+                    Value = workItem.Discution
+                });
+
+            await WitClient.UpdateWorkItemAsync(patch, TaskId);
+            statusService.SendStatus(EnBalloonIcon.Info, "Sync", $"{TaskId}#: Update Work Item.");
+        }
+        public async Task UpdateWorkItemAsync(int TaskId, WorkItemUpdateDto workItem, CancellationToken cancellationToken)
+        {
+            using var connection = await CreateConnectionAsync(cancellationToken);
+            using var WitClient = connection.GetClient<WorkItemTrackingHttpClient>(cancellationToken);
+
+            var patch = new JsonPatchDocument();
+            if (workItem.CompletedWork != null)
+                patch.Add(new JsonPatchOperation
+                {
+                    Operation = Operation.Add,
+                    Path = "/fields/Microsoft.VSTS.Scheduling.CompletedWork",
+                    Value = workItem.CompletedWork
+                });
+            if (workItem.RemainingWork != null)
+                patch.Add(new JsonPatchOperation
+                {
+                    Operation = Operation.Add,
+                    Path = "/fields/Microsoft.VSTS.Scheduling.RemainingWork",
+                    Value = workItem.RemainingWork
+                });
+            if (!string.IsNullOrEmpty(workItem.Discution))
+                patch.Add(new JsonPatchOperation
+                {
+                    Operation = Operation.Add,
+                    Path = "/fields/System.History",
+                    Value = workItem.Discution
+                });
+
             await WitClient.UpdateWorkItemAsync(patch, TaskId);
             statusService.SendStatus(EnBalloonIcon.Info, "Sync", $"{TaskId}#: Update Work Item.");
         }
@@ -157,7 +211,7 @@ namespace Ma.TimeManagement.Services
             return workItem;
         }
 
-        public async Task<WorkItemDto> CreateWorkItemAsync(string title, EnWorkState State, double originalEstimate, double RemainingWork, double CompletedWork, EnWorkItemType WorkItemType, Guid projectId, string discution,CancellationToken cancellationToken)
+        public async Task<WorkItemDto> CreateWorkItemAsync(WorkItemAddDto workItem,CancellationToken cancellationToken)
         {
             //WorkItemDto task = converterService.ConvertTo(await WitClient.CreateWorkItemAsync(patch, ProjectID, type));
             //return task;
@@ -194,28 +248,15 @@ namespace Ma.TimeManagement.Services
             var remainingWork = (currentRemainingWork - TotalHours);
             remainingWork = converterService.ConvertHourToRounded(remainingWork);
 
+            var workItemAdd = new WorkItemAddDto()
+            {
+                CompletedWork = TotalHours,
+                RemainingWork = remainingWork < 0 ? 0 : remainingWork,
+                Discution = discussionText
+            };
 
-            var patch = new JsonPatchDocument();
-            patch.Add(new JsonPatchOperation
-            {
-                Operation = Operation.Add,
-                Path = "/fields/Microsoft.VSTS.Scheduling.CompletedWork",
-                Value = TotalHours
-            });
-            patch.Add(new JsonPatchOperation
-            {
-                Operation = Operation.Add,
-                Path = "/fields/Microsoft.VSTS.Scheduling.RemainingWork",
-                Value = remainingWork < 0 ? 0 : remainingWork
-            });
-            patch.Add(new JsonPatchOperation
-            {
-                Operation = Operation.Add,
-                Path = "/fields/System.History",
-                Value = discussionText
-            });
             statusService.SendStatus(EnBalloonIcon.Info, "Sync", $"{workItemID}#: Update CompletedWork to {TotalHours} and RemainingWork to {remainingWork}.");
-            await UpdateWorkItemAsync(patch, workItemID,cancellationToken);
+            await UpdateWorkItemAsync(workItemID,workItemAdd,cancellationToken);
         }
 
         public Task<TeamProjectReferenceDto?> GetProjectAsync(Guid id, CancellationToken cancellationToken)

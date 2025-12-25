@@ -8,17 +8,17 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
 
-namespace Ma.TimeManagement.Migrations
+namespace Ma.TimeManagement.Migrations.Sqlite.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20251126104946_Remove_title_from_calander_model")]
-    partial class Remove_title_from_calander_model
+    [Migration("20251224183357_InitialSqliteMigration")]
+    partial class InitialSqliteMigration
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "9.0.11");
+            modelBuilder.HasAnnotation("ProductVersion", "10.0.1");
 
             modelBuilder.Entity("Ma.TimeManagement.Models.TeamProjectReference", b =>
                 {
@@ -68,6 +68,32 @@ namespace Ma.TimeManagement.Migrations
                     b.ToTable("TeamProjects");
                 });
 
+            modelBuilder.Entity("Ma.TimeManagement.Models.User", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("AdoPatEncrypted")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("AdoPatIv")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Username")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Username")
+                        .IsUnique();
+
+                    b.ToTable("Users");
+                });
+
             modelBuilder.Entity("Ma.TimeManagement.Models.WorkCalendarItem", b =>
                 {
                     b.Property<int>("Id")
@@ -115,9 +141,6 @@ namespace Ma.TimeManagement.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<Guid>("ProjectReferenceId")
-                        .HasColumnType("TEXT");
-
                     b.Property<double>("RemainingWork")
                         .HasColumnType("REAL");
 
@@ -137,7 +160,7 @@ namespace Ma.TimeManagement.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ProjectReferenceId");
+                    b.HasIndex("ProjectID");
 
                     b.ToTable("WorkItems");
                 });
@@ -155,7 +178,7 @@ namespace Ma.TimeManagement.Migrations
                 {
                     b.HasOne("Ma.TimeManagement.Models.TeamProjectReference", "ProjectReference")
                         .WithMany("workItems")
-                        .HasForeignKey("ProjectReferenceId")
+                        .HasForeignKey("ProjectID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 

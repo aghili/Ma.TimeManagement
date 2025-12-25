@@ -15,7 +15,7 @@ builder.Services.AddControllers();
 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
-builder.Services.AddLocalServices();
+builder.Services.AddLocalServices(builder);
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 //.AddNegotiate() // Windows Authentication (Kerberos/NTLM)
@@ -93,7 +93,16 @@ using (var scope = app.Services.CreateScope())
 
     using var applicationDbContext = dbContextFactory.CreateDbContext();
 
-    applicationDbContext.Database.Migrate();
+    try
+    {
+        applicationDbContext.Database.Migrate();
+    }
+    catch
+    {
+        applicationDbContext.Database.CloseConnection();
+        applicationDbContext.Database.EnsureDeleted();
+        applicationDbContext.Database.Migrate();
+    }
 }
 
 // Configure the HTTP request pipeline.

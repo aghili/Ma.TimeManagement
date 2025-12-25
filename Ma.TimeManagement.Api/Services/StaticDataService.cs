@@ -4,9 +4,12 @@ namespace Ma.TimeManagement.Services
 {
     public class StaticDataService : IStaticDataService
     {
-        public StaticDataService()
+        private readonly IWebHostEnvironment webHostEnvironment;
+
+        public StaticDataService(IWebHostEnvironment  webHostEnvironment)
         {
-            PathApplicationData = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Ma.TimeManagement");
+            this.webHostEnvironment = webHostEnvironment;
+            PathApplicationData = Path.Combine(webHostEnvironment.ContentRootPath, "APP_DATA");
             PathConfiguration = PathApplicationData;
             PathFullDatabase = Path.Combine(PathApplicationData, "database.db");
             PathFullSettings = Path.Combine(PathApplicationData, "appsettings.json");

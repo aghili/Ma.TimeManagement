@@ -31,10 +31,10 @@
         <StackPanel Grid.Row="0" Grid.ColumnSpan="4" HorizontalAlignment="Left" VerticalAlignment="Center">
             <TextBlock Text="Settings" FontSize="24"/>
         </StackPanel>
-        <Label Grid.Row="2" Grid.Column="0" VerticalAlignment="Center" Content="Server:" />
-        <TextBox Grid.Row="2" Grid.Column="2" VerticalAlignment="Center" IsReadOnly="True" Text="{Binding ServerUrl}"/>
-        <Label Grid.Row="4" Grid.Column="0" VerticalAlignment="Center" Content="Collection:"/>
-        <TextBox Grid.Row="4" Grid.Column="2" VerticalAlignment="Center" IsReadOnly="False"  Text="{Binding Collection}"/>
+        <Label Visibility="Collapsed" Grid.Row="2" Grid.Column="0" VerticalAlignment="Center" Content="Server:" />
+        <TextBox Visibility="Collapsed"  Grid.Row="2" Grid.Column="2" VerticalAlignment="Center" IsReadOnly="True" Text="{Binding ServerUrl}"/>
+        <Label Visibility="Collapsed"  Grid.Row="4" Grid.Column="0" VerticalAlignment="Center" Content="Collection:"/>
+        <TextBox Visibility="Collapsed"  Grid.Row="4" Grid.Column="2" VerticalAlignment="Center" IsReadOnly="False"  Text="{Binding Collection}"/>
         <Label Grid.Row="6" Grid.Column="0" VerticalAlignment="Center" Content="Bypass system proxy on Local network"/>
         <ToggleButton Grid.Row="6" Grid.Column="4"  HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Content="Used" IsChecked="{Binding BypassProxyOnLocal}"/>
         <Label Grid.Row="8" Grid.Column="0" VerticalAlignment="Center" Content="PAT:"/>

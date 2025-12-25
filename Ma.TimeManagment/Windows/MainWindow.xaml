@@ -9,6 +9,8 @@
         d:DataContext="{d:DesignInstance Type=vm:MainViewModel}"
         mc:Ignorable="d"
         Closing="Window_Closing"
+            Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+        Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}"
         Title="Ma.TimeManagement - Time Tracking for Azure DevOps" Width="800" MinWidth="800" MinHeight="600">
         <Window.Resources>
             <DataTemplate DataType="{x:Type vm:HomeViewModel}">

@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.13.35919.96
+# Visual Studio Version 18
+VisualStudioVersion = 18.1.11312.151
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ma.TimeManagement", "Ma.TimeManagment\Ma.TimeManagement.csproj", "{E3AC7123-8B9F-43FC-B15A-C816EEBF03D0}"
 EndProject
@@ -13,7 +13,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ma.TimeManagement.Api", "Ma
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ma.TimeManagement.Share", "Ma.TimeManagement.Share\Ma.TimeManagement.Share.csproj", "{5E3E5ACF-BC2C-4DE2-BAFC-AB0EFC72C8E9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ma.TimeManagement.Infrastructure", "Ma.TimeManagement.Infrastructure\Ma.TimeManagement.Infrastructure.csproj", "{3B102338-E031-4663-AE3C-9DEAA1E12C65}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ma.TimeManagement.Migrations.Sqlite", "Ma.TimeManagement.Migrations.Sqlite\Ma.TimeManagement.Migrations.Sqlite.csproj", "{96CED035-6C99-C748-2419-40ECF9B60A94}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ma.TimeManagement.Migrations.SqlServer", "Ma.TimeManagement.Migrations.SqlServer\Ma.TimeManagement.Migrations.SqlServer.csproj", "{4154BC05-6C78-ECEB-4373-32FEDE971896}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ma.TimeManagement.Data", "Ma.TimeManagement.Data\Ma.TimeManagement.Data.csproj", "{A2492EF9-B656-F4FF-C52D-A13E9C1AE0D8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -52,12 +56,24 @@ Global
 		{5E3E5ACF-BC2C-4DE2-BAFC-AB0EFC72C8E9}.DebugWithDisableAzure|Any CPU.Build.0 = Debug|Any CPU
 		{5E3E5ACF-BC2C-4DE2-BAFC-AB0EFC72C8E9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5E3E5ACF-BC2C-4DE2-BAFC-AB0EFC72C8E9}.Release|Any CPU.Build.0 = Release|Any CPU
-		{3B102338-E031-4663-AE3C-9DEAA1E12C65}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{3B102338-E031-4663-AE3C-9DEAA1E12C65}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{3B102338-E031-4663-AE3C-9DEAA1E12C65}.DebugWithDisableAzure|Any CPU.ActiveCfg = Debug|Any CPU
-		{3B102338-E031-4663-AE3C-9DEAA1E12C65}.DebugWithDisableAzure|Any CPU.Build.0 = Debug|Any CPU
-		{3B102338-E031-4663-AE3C-9DEAA1E12C65}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{3B102338-E031-4663-AE3C-9DEAA1E12C65}.Release|Any CPU.Build.0 = Release|Any CPU
+		{96CED035-6C99-C748-2419-40ECF9B60A94}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{96CED035-6C99-C748-2419-40ECF9B60A94}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{96CED035-6C99-C748-2419-40ECF9B60A94}.DebugWithDisableAzure|Any CPU.ActiveCfg = Debug|Any CPU
+		{96CED035-6C99-C748-2419-40ECF9B60A94}.DebugWithDisableAzure|Any CPU.Build.0 = Debug|Any CPU
+		{96CED035-6C99-C748-2419-40ECF9B60A94}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{96CED035-6C99-C748-2419-40ECF9B60A94}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4154BC05-6C78-ECEB-4373-32FEDE971896}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4154BC05-6C78-ECEB-4373-32FEDE971896}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4154BC05-6C78-ECEB-4373-32FEDE971896}.DebugWithDisableAzure|Any CPU.ActiveCfg = Debug|Any CPU
+		{4154BC05-6C78-ECEB-4373-32FEDE971896}.DebugWithDisableAzure|Any CPU.Build.0 = Debug|Any CPU
+		{4154BC05-6C78-ECEB-4373-32FEDE971896}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4154BC05-6C78-ECEB-4373-32FEDE971896}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A2492EF9-B656-F4FF-C52D-A13E9C1AE0D8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A2492EF9-B656-F4FF-C52D-A13E9C1AE0D8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A2492EF9-B656-F4FF-C52D-A13E9C1AE0D8}.DebugWithDisableAzure|Any CPU.ActiveCfg = Debug|Any CPU
+		{A2492EF9-B656-F4FF-C52D-A13E9C1AE0D8}.DebugWithDisableAzure|Any CPU.Build.0 = Debug|Any CPU
+		{A2492EF9-B656-F4FF-C52D-A13E9C1AE0D8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A2492EF9-B656-F4FF-C52D-A13E9C1AE0D8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

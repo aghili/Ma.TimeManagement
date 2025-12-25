@@ -125,5 +125,10 @@ namespace Ma.TimeManagement.Services
                 items.Add(ConvertTo(Item));
             return items;
         }
+
+        public WorkItemAddDto ConvertTo(WorkItemDto workItem,string discution)
+        {
+            return new() { CompletedWork = workItem.CompletedWork, OriginalEstimate = workItem.OriginalEstimate, RemainingWork = workItem.RemainingWork, ProjectID = workItem.ProjectID, State = workItem.State, Title = workItem.Title, WorkItemType = workItem.WorkItemType,Discution = discution };
+        }
     }
 }

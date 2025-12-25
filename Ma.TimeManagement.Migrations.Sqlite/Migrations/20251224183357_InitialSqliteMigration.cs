@@ -3,10 +3,10 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace Ma.TimeManagement.Migrations
+namespace Ma.TimeManagement.Migrations.Sqlite.Migrations
 {
     /// <inheritdoc />
-    public partial class init : Migration
+    public partial class InitialSqliteMigration : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -35,6 +35,20 @@ namespace Ma.TimeManagement.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Users",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
+                    Username = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
+                    AdoPatEncrypted = table.Column<string>(type: "TEXT", maxLength: 500, nullable: true),
+                    AdoPatIv = table.Column<string>(type: "TEXT", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Users", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "WorkItems",
                 columns: table => new
                 {
@@ -47,15 +61,14 @@ namespace Ma.TimeManagement.Migrations
                     Url = table.Column<string>(type: "TEXT", nullable: false),
                     WorkItemType = table.Column<int>(type: "INTEGER", nullable: false),
                     ProjectID = table.Column<Guid>(type: "TEXT", nullable: false),
-                    ProjectName = table.Column<string>(type: "TEXT", nullable: false),
-                    ProjectReferenceId = table.Column<Guid>(type: "TEXT", nullable: false)
+                    ProjectName = table.Column<string>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_WorkItems", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_WorkItems_TeamProjects_ProjectReferenceId",
-                        column: x => x.ProjectReferenceId,
+                        name: "FK_WorkItems_TeamProjects_ProjectID",
+                        column: x => x.ProjectID,
                         principalTable: "TeamProjects",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
@@ -69,7 +82,6 @@ namespace Ma.TimeManagement.Migrations
                         .Annotation("Sqlite:Autoincrement", true),
                     StartTime = table.Column<DateTime>(type: "TEXT", nullable: false),
                     DurationHour = table.Column<double>(type: "REAL", nullable: false),
-                    Title = table.Column<string>(type: "TEXT", nullable: false),
                     Description = table.Column<string>(type: "TEXT", nullable: false),
                     WorkItemID = table.Column<int>(type: "INTEGER", nullable: true),
                     Synced = table.Column<bool>(type: "INTEGER", nullable: false)
@@ -85,19 +97,28 @@ namespace Ma.TimeManagement.Migrations
                 });
 
             migrationBuilder.CreateIndex(
+                name: "IX_Users_Username",
+                table: "Users",
+                column: "Username",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_WorkCalendarItems_WorkItemID",
                 table: "WorkCalendarItems",
                 column: "WorkItemID");
 
             migrationBuilder.CreateIndex(
-                name: "IX_WorkItems_ProjectReferenceId",
+                name: "IX_WorkItems_ProjectID",
                 table: "WorkItems",
-                column: "ProjectReferenceId");
+                column: "ProjectID");
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropTable(
+                name: "Users");
+
             migrationBuilder.DropTable(
                 name: "WorkCalendarItems");
 

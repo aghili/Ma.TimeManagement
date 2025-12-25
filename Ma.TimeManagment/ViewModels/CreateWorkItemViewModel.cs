@@ -2,14 +2,8 @@
 using CommunityToolkit.Mvvm.Input;
 using Ma.TimeManagement.Models;
 using Ma.TimeManagement.Services;
-using Ma.TimeManagement.Views;
 using Microsoft.Extensions.Logging;
-using Microsoft.TeamFoundation.WorkItemTracking.WebApi.Models;
-using Microsoft.VisualStudio.Services.Common;
-using Microsoft.VisualStudio.Services.WebApi.Patch;
-using Microsoft.VisualStudio.Services.WebApi.Patch.Json;
 using System.Windows;
-using System.Windows.Navigation;
 
 namespace Ma.TimeManagement.ViewModels
 {
@@ -48,7 +42,13 @@ namespace Ma.TimeManagement.ViewModels
             var type = SelectedTypeIndex == 0 ? EnWorkItemType.Task : EnWorkItemType.UserStory;
             try
             {
-                var created = await azureDevOpsService.CreateWorkItemAsync(Title,Models.EnWorkState.New,0,0,0,type,Guid.NewGuid(), Description,cancellationToken);
+                var workItem = new WorkItemAddDto()
+                {
+                    Title = Title,
+                    Discution = Description,
+                    WorkItemType = type,
+                };
+                var created = await azureDevOpsService.CreateWorkItemAsync(workItem,cancellationToken);
                 Application.Current.Dispatcher.Invoke(() => MessageBox.Show($"Created {type} ID: {created.Id}"));
                 messageService.RefreshTasks();
                 NavigateToHome();

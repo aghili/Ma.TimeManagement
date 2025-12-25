@@ -22,7 +22,6 @@
     </PackageReference>
     <PackageReference Include="Swashbuckle.AspNetCore" Version="10.0.1" />
     <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="10.0.1" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.1" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.1">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -35,6 +34,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Ma.TimeManagement.Migrations.SqlServer\Ma.TimeManagement.Migrations.SqlServer.csproj" />
     <ProjectReference Include="..\Ma.TimeManagement.Share\Ma.TimeManagement.Share.csproj" />
   </ItemGroup>
 

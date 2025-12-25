@@ -81,7 +81,7 @@
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="auto"/>
                             </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="2"  FontWeight="Bold" Text="{Binding Remaining,StringFormat={}{0:f1}H Left}"/>
+                            <TextBlock Grid.Column="2"  FontWeight="Bold" Text="{Binding RemainingWork,StringFormat={}{0:f1}H Left}"/>
                             <TextBlock Grid.Column="0"  FontWeight="Bold" Text="{Binding TotalWork,StringFormat={}{0:f1}h}"/>
                         </Grid>
                     </Grid>

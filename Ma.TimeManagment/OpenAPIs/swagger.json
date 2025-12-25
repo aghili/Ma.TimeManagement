@@ -576,6 +576,58 @@
           }
         }
       },
+      "patch": {
+        "tags": [
+          "WorkItems"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/WorkItemUpdateDto"
+                  }
+                ]
+              }
+            },
+            "text/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/WorkItemUpdateDto"
+                  }
+                ]
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/WorkItemUpdateDto"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
       "delete": {
         "tags": [
           "WorkItems"
@@ -890,6 +942,43 @@
           }
         },
         "additionalProperties": false
+      },
+      "WorkItemUpdateDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "state": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/EnWorkState"
+              }
+            ],
+            "nullable": true
+          },
+          "originalEstimate": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "remainingWork": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "completedWork": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "discution": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
       }
     },
     "securitySchemes": {
@@ -903,7 +992,7 @@
   },
   "security": [
     {
-      "Bearer": []
+      "Bearer": [ ]
     }
   ],
   "tags": [

@@ -9,6 +9,8 @@
     <Configurations>Debug;Release;DebugWithDisableAzure</Configurations>
     <ApplicationIcon>Icon.ico</ApplicationIcon>
     <PackageIcon>Icon.png</PackageIcon>
+	  <NoWarn>$(NoWarn);WPF0001</NoWarn>
+	  <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugWithDisableAzure|AnyCPU'">
@@ -17,7 +19,6 @@
 
   <ItemGroup>
     <None Remove="Icon.png" />
-    <None Remove="OpenAPIs\swagger.json" />
     <None Remove="Splash.png" />
   </ItemGroup>
 
@@ -30,21 +31,14 @@
   </ItemGroup>
 
   <ItemGroup>
-    <OpenApiReference Include="OpenAPIs\swagger.json" Namespace="Ma.TimeManagement.OpenAPIService" Options="/GenerateDtoTypes:false /AdditionalNamespaceUsages:Ma.TimeManagement.Models" ClassName="MaTimeManagmentApiClient" />
+    <OpenApiReference Include="OpenAPIs\swagger.json" Namespace="Ma.TimeManagement.OpenAPIService" Options="/GenerateDtoTypes:false /AdditionalNamespaceUsages:Ma.TimeManagement.Models" ClassName="MaTimeManagmentApiClient">
+      <SourceUri>https://localhost:7185/swagger/v1/swagger.json</SourceUri>
+    </OpenApiReference>
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
     <PackageReference Include="Hardcodet.NotifyIcon.Wpf" Version="2.0.1" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.1" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.1">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.1">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
     <PackageReference Include="Microsoft.Extensions.ApiDescription.Client" Version="7.0.2">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -62,6 +56,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Ma.TimeManagement.Migrations.Sqlite\Ma.TimeManagement.Migrations.Sqlite.csproj" />
     <ProjectReference Include="..\Ma.TimeManagement.Share\Ma.TimeManagement.Share.csproj" />
   </ItemGroup>
 

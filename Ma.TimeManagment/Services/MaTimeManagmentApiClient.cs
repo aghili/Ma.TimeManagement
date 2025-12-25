@@ -16,14 +16,7 @@ namespace Ma.TimeManagement.OpenAPIService
             _httpClient = httpClient;
             this.settingsService = settingsService;
             this.tokenService = tokenService;
-            BaseUrl = settingsService.FirstServer.ServerUrl;
-        }
-        partial void PrepareRequest(HttpClient client, HttpRequestMessage request, string url)
-        {
-            
-            //client ??= new HttpClient();
-
-            //request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", tokenService.GetToken(false));
+            BaseUrl = "https://feed-srv.mhd.mahaksoft.com:1443";//settingsService.FirstServer.ServerUrl;
         }
     }
 }

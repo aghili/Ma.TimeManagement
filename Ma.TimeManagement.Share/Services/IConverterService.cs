@@ -19,5 +19,6 @@ namespace Ma.TimeManagement.Services
         IEnumerable<WorkItem> ConvertTo(IEnumerable<WorkItemDto> Items);
         IEnumerable<TeamProjectReferenceDto> ConvertTo(IEnumerable<Microsoft.TeamFoundation.Core.WebApi.TeamProjectReference> Items);
         IEnumerable<TeamProjectReference> ConvertTo(IEnumerable<TeamProjectReferenceDto> Items);
+        WorkItemAddDto ConvertTo(WorkItemDto workItem, string discution);
     }
 }
