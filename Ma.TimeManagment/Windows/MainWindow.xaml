@@ -9,16 +9,15 @@
         d:DataContext="{d:DesignInstance Type=vm:MainViewModel}"
         mc:Ignorable="d"
         Closing="Window_Closing"
-            Foreground="{DynamicResource TextFillColorPrimaryBrush}"
-        Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}"
-        Title="Ma.TimeManagement - Time Tracking for Azure DevOps" Width="800" MinWidth="800" MinHeight="600">
-        <Window.Resources>
-            <DataTemplate DataType="{x:Type vm:HomeViewModel}">
+        Background="{DynamicResource ApplicationBackgroundBrush }"
+                Title="Ma.TimeManagement - Time Tracking for Azure DevOps" Width="800" MinWidth="800" MinHeight="600">
+    <Window.Resources>
+        <DataTemplate DataType="{x:Type vm:HomeViewModel}">
             <view:HomeView />
-            </DataTemplate>
-            <DataTemplate DataType="{x:Type vm:SettingsViewModel}">
-                <view:SettingsView />
-            </DataTemplate>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:SettingsViewModel}">
+            <view:SettingsView />
+        </DataTemplate>
         <DataTemplate DataType="{x:Type vm:CreateWorkItemViewModel}">
             <view:HomeView />
         </DataTemplate>
@@ -27,20 +26,29 @@
         </DataTemplate>
     </Window.Resources>
 
-        <Grid Margin="5">
+    <Grid Margin="5">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition />
+        </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition Height="auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="auto"/>
         </Grid.RowDefinitions>
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+        <Grid>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" >
                 <Button Content="Home" Command="{Binding NavigateHomeCommand}" />
-            <Button Content="Timeline" Command="{Binding NavigateTimelineCommand}" />
-            <Button Content="Settings" Command="{Binding NavigateSettingsCommand}" />
+                <Button Content="Timeline" Command="{Binding NavigateTimelineCommand}" />
+                <Button Content="Settings" Command="{Binding NavigateSettingsCommand}" />
             </StackPanel>
-
-            <ContentControl Grid.Row="1" Margin="20,0,20,0" Content="{Binding CurrentViewModel}" />
-        <Grid Grid.Row="2">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" >
+                    <Button Content="Dark" Command="{Binding SetDarkThemeCommand}" Margin="20,0,0,0"/>
+            <Button Content="Light" Command="{Binding SetLightThemeCommand}" Margin="10,0,0,0"/>
+            <Button Content="System" Command="{Binding SetSystemThemeCommand}" Margin="10,0,0,0"/>
+        </StackPanel>
+        </Grid>
+        <ContentControl Grid.Row="1" Margin="20,0,20,0" Content="{Binding CurrentViewModel}" />
+        <Grid Grid.Row="2" Grid.ColumnSpan="2" >
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="auto"/>
@@ -48,5 +56,5 @@
             <TextBlock Grid.Column="0" Text="{Binding Message}"/>
             <Button Grid.Column="1" Content="Minimize to Tray" Command="{Binding MinimizeCommand}" Margin="10,0,0,0"/>
         </Grid>
-        </Grid>
-    </Window>
+    </Grid>
+</Window>

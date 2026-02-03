@@ -27,7 +27,7 @@ namespace Ma.TimeManagement.Services
             await _lock.WaitAsync();
             try
             {
-                var authClient = _serviceProvider.GetRequiredService<MaTimeManagmentApiClient>();
+                var authClient = _serviceProvider.GetRequiredService<MaTimeManagementApiClient>();
 
                 if (!forceRefresh && !string.IsNullOrEmpty(_cachedToken))
                     return _cachedToken;
@@ -35,10 +35,10 @@ namespace Ma.TimeManagement.Services
 
                 RegisterModel registerModel = new() { Username = Path.Combine(Environment.UserDomainName, Environment.UserName), PAT = _settingsService.FirstServer.PAT };
 
-                var regResponse = await authClient.RegisterAsync(registerModel, cancellationToken);
+                var regResponse = await authClient.ApiAuthRegisterAsync(registerModel, cancellationToken);
                 userID = regResponse.UserID;
 
-                var loginResponse = await authClient.LoginAsync(new LoginModel { UserID = userID }, cancellationToken);
+                var loginResponse = await authClient.ApiAuthLoginAsync(new LoginModel { UserID = userID }, cancellationToken);
                 _cachedToken = loginResponse.Token;
 
                 return _cachedToken!;
@@ -57,7 +57,7 @@ namespace Ma.TimeManagement.Services
             _lock.Wait();
             try
             {
-                var authClient = _serviceProvider.GetRequiredService<MaTimeManagmentApiClient>();
+                var authClient = _serviceProvider.GetRequiredService<MaTimeManagementApiClient>();
 
                 if (!forceRefresh && !string.IsNullOrEmpty(_cachedToken))
                     return _cachedToken;
@@ -67,14 +67,14 @@ namespace Ma.TimeManagement.Services
                 {
                     RegisterModel registerModel = new() { Username = Environment.UserDomainName };
                     // Using your generated client method
-                    var regResponse = authClient.RegisterAsync(registerModel).GetAwaiter().GetResult();
+                    var regResponse = authClient.ApiAuthRegisterAsync(registerModel).GetAwaiter().GetResult();
                     userID = regResponse.UserID;
                     _settingsService.FirstServer.PAT = userID.ToString();
                 }
 
                 // 2. Get Token (Login)
                 // Using your generated client method
-                var loginResponse = authClient.LoginAsync(new LoginModel { UserID = userID }).GetAwaiter().GetResult();
+                var loginResponse = authClient.ApiAuthLoginAsync(new LoginModel { UserID = userID }).GetAwaiter().GetResult();
                 _cachedToken = loginResponse.Token;
 
                 return _cachedToken!;

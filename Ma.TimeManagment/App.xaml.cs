@@ -40,6 +40,7 @@ namespace Ma.TimeManagement
                 var connectionString = context.Configuration.GetConnectionString("DefaultConnection") ?? new SqliteConnectionStringBuilder() { DataSource = staticDataInstance.PathFullDatabase, Cache = SqliteCacheMode.Shared, Pooling = true }.ConnectionString;
                 context.Configuration["DefaultConnection"] = connectionString;
 
+                services.AddSingleton<IThemeService, ThemeService>();
                 services.AddSingleton<IStaticDataService>(staticDataInstance);
                 services.AddSingleton<ICustomDnsResolver,CustomDnsResolver>();
                 services.AddDbContextFactory<ApplicationDbContext>(options =>
@@ -49,13 +50,13 @@ namespace Ma.TimeManagement
 
                 services.AddHttpClient<ITokenService,TokenService>((sp, client) => {
                     //client.BaseAddress = new Uri("https://your-api.com");
-                }).AddTypedClient<MaTimeManagmentApiClient>();
+                }).AddTypedClient<MaTimeManagementApiClient>();
 
                 // 2. Register the Handler
                 services.AddTransient<TokenRefreshHandler>();
 
                 // 3. Register the "Main" version of the client (used by your App)
-                services.AddHttpClient<MaTimeManagmentApiClient>((sp, client) => {
+                services.AddHttpClient<MaTimeManagementApiClient>((sp, client) => {
                     //client.BaseAddress = new Uri("https://your-api.com");
                 })
                   .ConfigurePrimaryHttpMessageHandler(sp =>
@@ -88,7 +89,7 @@ namespace Ma.TimeManagement
 
                 //services.AddTransient<AuthHeaderHandler>();
 
-                //services.AddHttpClient<MaTimeManagmentApiClient>(client =>
+                //services.AddHttpClient<MaTimeManagementApiClient>(client =>
                 //{
                 //    client.BaseAddress = new Uri("api.yourdomain.com");
                 //})
@@ -176,9 +177,10 @@ namespace Ma.TimeManagement
         {
             base.OnStartup(e);
             await _host.StartAsync();
-            var mainWindow = _host.Services.GetRequiredService<MainWindow>();
-            mainWindow.Show();
-         
+            this.MainWindow = _host.Services.GetRequiredService<MainWindow>();
+            //mainWindow.Show();
+            this.ThemeMode = ThemeMode.System;
+
             //ApplicationThemeManager.ApplySystemTheme();
         }
 

@@ -18,12 +18,14 @@ namespace Ma.TimeManagement.ViewModels
         [ObservableProperty]
         private string message;
         private readonly ILogger<MainViewModel> logger;
+        private readonly IThemeService themeService;
         private readonly INavigationStore _navigationStore;
         private readonly INavigationService _navigationService;
 
-        public MainViewModel(ILogger<MainViewModel> logger,INavigationStore navigationStore, INavigationService navigationService)
+        public MainViewModel(ILogger<MainViewModel> logger,IThemeService themeService,INavigationStore navigationStore, INavigationService navigationService)
         {
             this.logger = logger;
+            this.themeService = themeService;
             _navigationStore = navigationStore;
             _navigationService = navigationService;
 
@@ -44,6 +46,46 @@ namespace Ma.TimeManagement.ViewModels
                 Message = $"{m.Title}:{m.Description}";
             });
 
+        }
+
+        [RelayCommand]
+        private void SetLightTheme()
+        {
+            try
+            {
+                themeService.SetLightTheme();
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, GetType().Name, []);
+                Console.WriteLine(ex);
+            }
+        }
+        [RelayCommand]
+        private void SetDarkTheme()
+        {
+            try
+            {
+                themeService.SetDarkTheme();
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, GetType().Name, []);
+                Console.WriteLine(ex);
+            }
+        }
+        [RelayCommand]
+        private void SetSystemTheme()
+        {
+            try
+            {
+                themeService.SetDefaultTheme();
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, GetType().Name, []);
+                Console.WriteLine(ex);
+            }
         }
 
         [RelayCommand]

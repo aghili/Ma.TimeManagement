@@ -1,26 +1,14 @@
-﻿using Hardcodet.Wpf.TaskbarNotification;
-using Ma.TimeManagement.Services;
-using Microsoft.VisualStudio.Services.WebApi.Patch.Json;
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement;
-using System.Windows.Threading;
-using System.Windows;
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Microsoft.VisualStudio.Services.WebApi.Patch;
 using CommunityToolkit.Mvvm.Messaging;
 using Ma.TimeManagement.Models;
-using Microsoft.Extensions.Hosting;
-using Newtonsoft.Json.Linq;
+using Ma.TimeManagement.Services;
 using Microsoft.Extensions.Logging;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
-using System.Security.Policy;
+using System.Runtime.InteropServices;
+using System.Windows.Threading;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
 namespace Ma.TimeManagement.ViewModels
 {

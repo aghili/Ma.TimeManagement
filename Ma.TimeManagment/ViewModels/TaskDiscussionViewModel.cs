@@ -6,7 +6,7 @@ namespace Ma.TimeManagement.ViewModels
     public partial class TaskDiscussionViewModel : ObservableObject
     {
         [ObservableProperty]
-        private string _discussion;
+        private string _discussion = string.Empty;
         [ObservableProperty]
         private WorkItem _task;
     }

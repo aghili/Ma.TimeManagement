@@ -1,4 +1,4 @@
-{
+﻿{
   "openapi": "3.0.4",
   "info": {
     "title": "Ma.TimeManagement.Api",
@@ -10,6 +10,7 @@
         "tags": [
           "Auth"
         ],
+        "operationId": "whoami",
         "responses": {
           "200": {
             "description": "OK"
@@ -22,6 +23,7 @@
         "tags": [
           "Auth"
         ],
+        "operationId": "login",
         "requestBody": {
           "content": {
             "application/json": {
@@ -82,6 +84,7 @@
         "tags": [
           "Auth"
         ],
+        "operationId": "register",
         "requestBody": {
           "content": {
             "application/json": {
@@ -142,6 +145,7 @@
         "tags": [
           "Auth"
         ],
+        "operationId": "save-pat",
         "requestBody": {
           "content": {
             "application/json": {
@@ -185,6 +189,7 @@
         "tags": [
           "Projects"
         ],
+        "operationId": "ProjectsAll",
         "responses": {
           "200": {
             "description": "OK",
@@ -221,6 +226,7 @@
         "tags": [
           "Projects"
         ],
+        "operationId": "ProjectsPOST",
         "requestBody": {
           "content": {
             "application/json": {
@@ -281,6 +287,7 @@
         "tags": [
           "Projects"
         ],
+        "operationId": "ProjectsGET",
         "parameters": [
           {
             "name": "id",
@@ -319,6 +326,7 @@
         "tags": [
           "Projects"
         ],
+        "operationId": "ProjectsPUT",
         "parameters": [
           {
             "name": "id",
@@ -371,6 +379,7 @@
         "tags": [
           "Projects"
         ],
+        "operationId": "ProjectsDELETE",
         "parameters": [
           {
             "name": "id",
@@ -394,6 +403,7 @@
         "tags": [
           "WorkItems"
         ],
+        "operationId": "WorkItemsAll",
         "responses": {
           "200": {
             "description": "OK",
@@ -430,6 +440,7 @@
         "tags": [
           "WorkItems"
         ],
+        "operationId": "WorkItemsPOST",
         "requestBody": {
           "content": {
             "application/json": {
@@ -490,6 +501,7 @@
         "tags": [
           "WorkItems"
         ],
+        "operationId": "WorkItemsGET",
         "parameters": [
           {
             "name": "id",
@@ -528,6 +540,7 @@
         "tags": [
           "WorkItems"
         ],
+        "operationId": "WorkItemsPUT",
         "parameters": [
           {
             "name": "id",
@@ -580,6 +593,7 @@
         "tags": [
           "WorkItems"
         ],
+        "operationId": "WorkItemsPATCH",
         "parameters": [
           {
             "name": "id",
@@ -632,6 +646,7 @@
         "tags": [
           "WorkItems"
         ],
+        "operationId": "WorkItemsDELETE",
         "parameters": [
           {
             "name": "id",
@@ -654,37 +669,38 @@
   "components": {
     "schemas": {
       "EnWorkItemType": {
+        "type": "integer",
+        "format": "int32",
         "enum": [
           0,
           1,
           2,
           3
-        ],
-        "type": "integer",
-        "format": "int32"
+        ]
       },
       "EnWorkState": {
+        "type": "integer",
+        "format": "int32",
         "enum": [
           0,
           1,
           2,
           3
-        ],
-        "type": "integer",
-        "format": "int32"
+        ]
       },
       "LoginModel": {
         "type": "object",
+        "additionalProperties": false,
         "properties": {
           "userID": {
             "type": "string",
             "format": "uuid"
           }
-        },
-        "additionalProperties": false
+        }
       },
       "LoginResult": {
         "type": "object",
+        "additionalProperties": false,
         "properties": {
           "token": {
             "type": "string",
@@ -693,10 +709,11 @@
           "patConfigured": {
             "type": "boolean"
           }
-        },
-        "additionalProperties": false
+        }
       },
       "ProjectState": {
+        "type": "integer",
+        "format": "int32",
         "enum": [
           0,
           1,
@@ -705,23 +722,22 @@
           4,
           -2,
           -1
-        ],
-        "type": "integer",
-        "format": "int32"
+        ]
       },
       "ProjectVisibility": {
+        "type": "integer",
+        "format": "int32",
         "enum": [
           0,
           1,
           2,
           3,
           -1
-        ],
-        "type": "integer",
-        "format": "int32"
+        ]
       },
       "RegisterModel": {
         "type": "object",
+        "additionalProperties": false,
         "properties": {
           "username": {
             "type": "string",
@@ -731,31 +747,31 @@
             "type": "string",
             "nullable": true
           }
-        },
-        "additionalProperties": false
+        }
       },
       "RegisterResult": {
         "type": "object",
+        "additionalProperties": false,
         "properties": {
           "userID": {
             "type": "string",
             "format": "uuid"
           }
-        },
-        "additionalProperties": false
+        }
       },
       "SavePatModel": {
         "type": "object",
+        "additionalProperties": false,
         "properties": {
           "pat": {
             "type": "string",
             "nullable": true
           }
-        },
-        "additionalProperties": false
+        }
       },
       "TeamProjectReferenceAddDto": {
         "type": "object",
+        "additionalProperties": false,
         "properties": {
           "name": {
             "type": "string",
@@ -769,11 +785,11 @@
             "type": "string",
             "nullable": true
           }
-        },
-        "additionalProperties": false
+        }
       },
       "TeamProjectReferenceDto": {
         "type": "object",
+        "additionalProperties": false,
         "properties": {
           "id": {
             "type": "string",
@@ -833,14 +849,14 @@
             "type": "string",
             "nullable": true
           }
-        },
-        "additionalProperties": false
+        }
       },
       "WorkItemAddDto": {
+        "type": "object",
+        "additionalProperties": false,
         "required": [
           "projectID"
         ],
-        "type": "object",
         "properties": {
           "projectID": {
             "type": "string",
@@ -883,11 +899,11 @@
             "type": "string",
             "nullable": true
           }
-        },
-        "additionalProperties": false
+        }
       },
       "WorkItemDto": {
         "type": "object",
+        "additionalProperties": false,
         "properties": {
           "id": {
             "type": "integer",
@@ -933,30 +949,30 @@
           },
           "totalWork": {
             "type": "number",
-            "format": "double",
-            "readOnly": true
+            "readOnly": true,
+            "format": "double"
           },
           "projectName": {
             "type": "string",
             "nullable": true
           }
-        },
-        "additionalProperties": false
+        }
       },
       "WorkItemUpdateDto": {
         "type": "object",
+        "additionalProperties": false,
         "properties": {
           "title": {
             "type": "string",
             "nullable": true
           },
           "state": {
+            "nullable": true,
             "allOf": [
               {
                 "$ref": "#/components/schemas/EnWorkState"
               }
-            ],
-            "nullable": true
+            ]
           },
           "originalEstimate": {
             "type": "number",
@@ -977,8 +993,7 @@
             "type": "string",
             "nullable": true
           }
-        },
-        "additionalProperties": false
+        }
       }
     },
     "securitySchemes": {

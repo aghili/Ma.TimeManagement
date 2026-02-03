@@ -62,6 +62,7 @@ builder.Services.AddSwaggerGen(c =>
 {
     //c.SwaggerDoc("v1", new OpenApiInfo { Title = "Ma.TimeManagement API", Version = "v1" });
     c.UseAllOfToExtendReferenceSchemas();
+    //c.OperationFilter<UseActualParameterNameForBodyFilter>(); 
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Description = "JWT Authorization header. Example: <b>Bearer eyJhbGci...</b>",

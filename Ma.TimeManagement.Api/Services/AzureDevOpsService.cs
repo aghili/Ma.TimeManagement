@@ -248,7 +248,7 @@ namespace Ma.TimeManagement.Services
             var remainingWork = (currentRemainingWork - TotalHours);
             remainingWork = converterService.ConvertHourToRounded(remainingWork);
 
-            var workItemAdd = new WorkItemAddDto()
+            var workItemAdd = new WorkItemUpdateDto()
             {
                 CompletedWork = TotalHours,
                 RemainingWork = remainingWork < 0 ? 0 : remainingWork,

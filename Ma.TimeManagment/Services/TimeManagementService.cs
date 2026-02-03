@@ -180,7 +180,6 @@ namespace Ma.TimeManagement.Services
                 if (task == null)
                     continue;
                 tvm.Task =  task;
-                dialogService.ShowDialog(tvm);
                 await azureDevOpsService.WorkItemAddWorkCompleteAsync(item.WorkItemID ?? 0, item.DurationHour,tvm.Discussion,cancellationToken);
                 foreach (var workCalendarItem in workCalendarItems.Where(i => i.WorkItemID == item.WorkItemID))
                     await dataService.SetworkCalendarItemSyncedAsync(workCalendarItem.Id, cancellationToken);

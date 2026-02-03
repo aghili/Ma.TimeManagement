@@ -8,6 +8,24 @@ using System.Windows;
 
 namespace Ma.TimeManagement.Services
 {
+    public class ThemeService : IThemeService
+    {
+        public void SetLightTheme()
+        {
+            Application.Current.ThemeMode = ThemeMode.Light;
+        }
+
+        public void SetDarkTheme()
+        {
+            Application.Current.ThemeMode = ThemeMode.Dark;
+        }
+
+        public void SetDefaultTheme()
+        {
+            Application.Current.ThemeMode = ThemeMode.System;
+        }
+
+    }
     public class StatusService : IStatusService
     {
         public TaskbarIcon _notifyIcon;

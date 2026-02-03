@@ -1,16 +1,15 @@
 ﻿using Ma.TimeManagement.Models;
 using Ma.TimeManagement.OpenAPIService;
-using Microsoft.VisualStudio.Services.WebApi.Patch.Json;
 
 namespace Ma.TimeManagement.Services
 {
 
     internal class AzureDevOpsService : IAzureDevOpsService
     {
-        private MaTimeManagmentApiClient clientmaTimeManagement;
+        private MaTimeManagementApiClient clientmaTimeManagement;
         private readonly IConverterService converterService;
 
-        public AzureDevOpsService(MaTimeManagmentApiClient maTimeManagementApi,IConverterService converterService)
+        public AzureDevOpsService(MaTimeManagementApiClient maTimeManagementApi,IConverterService converterService)
         {
             this.clientmaTimeManagement = maTimeManagementApi;
             this.converterService = converterService;
@@ -18,36 +17,39 @@ namespace Ma.TimeManagement.Services
 
         public async Task<Models.WorkItemDto> CreateWorkItemAsync(WorkItemAddDto workItem,CancellationToken cancellationToken)
         {
-            return await clientmaTimeManagement.WorkItemsPOSTAsync(workItem,cancellationToken);
+            return await clientmaTimeManagement.ApiWorkItemsPostAsync(workItem,cancellationToken);
         }
 
-        public async Task<Models.TeamProjectReferenceDto> GetProjectAsync(Guid id, CancellationToken cancellationToken)
+        public async Task<TeamProjectReferenceDto?> GetProjectAsync(Guid id, CancellationToken cancellationToken)
         {
-            return await clientmaTimeManagement.ProjectsGETAsync(id,cancellationToken);
+            // Allow null to match IAzureDevOpsService signature (Task<T?>)
+            return await clientmaTimeManagement.ApiProjectsGetAsync(id,cancellationToken);
         }
 
         public async Task<ICollection<Models.TeamProjectReferenceDto>> GetProjectsAsync(CancellationToken cancellationToken)
         {
-            return await clientmaTimeManagement.ProjectsAllAsync(cancellationToken);
+            return await clientmaTimeManagement.ApiProjectsGetAsync(cancellationToken);
         }
 
         public async Task<ICollection<Models.WorkItemDto>> GetTasksAsync(CancellationToken cancellationToken)
         {
-            return await clientmaTimeManagement.WorkItemsAllAsync(cancellationToken);
+            return await clientmaTimeManagement.ApiWorkItemsGetAsync(cancellationToken);
         }
 
-        public async Task<Models.WorkItemDto> GetWorkItemAsync(int TaskId, CancellationToken cancellationToken)
+        public async Task<Models.WorkItemDto?> GetWorkItemAsync(int TaskId, CancellationToken cancellationToken)
         {
-            return await clientmaTimeManagement.WorkItemsGETAsync(TaskId,cancellationToken);
+            // Allow null to match IAzureDevOpsService signature (Task<T?>)
+            return await clientmaTimeManagement.ApiWorkItemsGetAsync(TaskId,cancellationToken);
         }
 
         public async Task UpdateWorkItemAsync(int TaskId,WorkItemAddDto workItem, CancellationToken cancellationToken)
         {
-            await clientmaTimeManagement.WorkItemsPUTAsync(TaskId, workItem, cancellationToken);
+            await clientmaTimeManagement.ApiWorkItemsPutAsync(TaskId, workItem, cancellationToken);
         }
-  public async Task UpdateWorkItemAsync(int TaskId,WorkItemUpdateDto workItem, CancellationToken cancellationToken)
+
+        public async Task UpdateWorkItemAsync(int TaskId,WorkItemUpdateDto workItem, CancellationToken cancellationToken)
         {
-            await clientmaTimeManagement.WorkItemsPATCHAsync(TaskId, workItem, cancellationToken);
+            await clientmaTimeManagement.ApiWorkItemsPatchAsync(TaskId, workItem, cancellationToken);
         }
 
         public async Task WorkItemAddWorkCompleteAsync(int workItemID, double durationHour, string discussionText,CancellationToken cancellationToken)
@@ -68,7 +70,7 @@ namespace Ma.TimeManagement.Services
                 Discution = discussionText
             };
 
-            await clientmaTimeManagement.WorkItemsPATCHAsync(workItemID, workItemUpdate , cancellationToken);
+            await clientmaTimeManagement.ApiWorkItemsPatchAsync(workItemID, workItemUpdate , cancellationToken);
 
         }
     }

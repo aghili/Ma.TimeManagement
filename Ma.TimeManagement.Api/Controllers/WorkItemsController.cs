@@ -2,7 +2,6 @@
 using Ma.TimeManagement.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -15,11 +14,13 @@ namespace Ma.TimeManagement.Api.Controllers
     {
         private readonly IAzureDevOpsService azureDevOpsService;
         private readonly IUserService _userService;
+        private readonly IConverterService converterService;
 
-        public WorkItemsController(IAzureDevOpsService azureDevOpsService, IUserService userService)
+        public WorkItemsController(IAzureDevOpsService azureDevOpsService, IUserService userService,IConverterService converterService)
         {
             this.azureDevOpsService = azureDevOpsService;
             _userService = userService;
+            this.converterService = converterService;
         }
 
         [HttpGet]
@@ -30,28 +31,28 @@ namespace Ma.TimeManagement.Api.Controllers
 
         // GET api/<WorkItemsController>/5
         [HttpGet("{id}")]
-        public async Task<WorkItemDto> Get(int id,CancellationToken cancellationToken)
+        public async Task<WorkItemDto?> Get(int id,CancellationToken cancellationToken)
         {
             return await azureDevOpsService.GetWorkItemAsync(id,cancellationToken);
         }
 
         // POST api/<WorkItemsController>
         [HttpPost]
-        public async Task<WorkItemDto> Post([FromBody] WorkItemAddDto item,CancellationToken cancellationToken)
+        public async Task<WorkItemDto> Post(WorkItemAddDto item, CancellationToken cancellationToken)
         {
-            return await azureDevOpsService.CreateWorkItemAsync(item,cancellationToken);
+            return await azureDevOpsService.CreateWorkItemAsync(item, cancellationToken);
         }
 
         // PUT api/<WorkItemsController>/5
         [HttpPut("{id}")]
-        public async Task Put(int id, [FromBody] WorkItemAddDto workItem,CancellationToken cancellationToken)
+        public async Task Put(int id, WorkItemAddDto workItem,CancellationToken cancellationToken)
         {
-            var jsonPatch = new Microsoft.VisualStudio.Services.WebApi.Patch.Json.JsonPatchDocument();
+            //var jsonPatch = new Microsoft.VisualStudio.Services.WebApi.Patch.Json.JsonPatchDocument();
             await azureDevOpsService.UpdateWorkItemAsync(id,workItem,cancellationToken);
         }
         // PUT api/<WorkItemsController>/5
         [HttpPatch("{id}")]
-        public async Task Patch(int id, [FromBody] WorkItemUpdateDto workItem, CancellationToken cancellationToken)
+        public async Task Patch(int id, WorkItemUpdateDto workItem, CancellationToken cancellationToken)
         {
             var jsonPatch = new Microsoft.VisualStudio.Services.WebApi.Patch.Json.JsonPatchDocument();
             await azureDevOpsService.UpdateWorkItemAsync(id, workItem, cancellationToken);
